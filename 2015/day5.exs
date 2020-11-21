@@ -4,7 +4,64 @@ defmodule Santa.String do
   end
 
   def is_nice2(string) do
-    has_pair?(string) and has_repeat(string)
+    has_pair?(string) and has_repeat?(string)
+  end
+
+  def has_repeat?(string) when is_binary(string) do
+    string
+    |> String.graphemes()
+    |> has_repeat?()
+  end
+
+  def has_repeat?([a, _, a]) do
+    true
+  end
+
+  def has_repeat?([a, _, a | _]) do
+    true
+  end
+
+  def has_repeat?([_ | t]) do
+    has_repeat?(t)
+  end
+
+  def has_repeat?(_) do
+    false
+  end
+
+  def has_pair?(string) when is_binary(string) do
+    string
+    |> String.graphemes()
+    |> has_pair?(MapSet.new())
+  end
+
+  def has_pair?([a, b, a, b | _], _) do
+    true
+  end
+
+  def has_pair?([a, a, a, b | t], set) when a != b do
+    set = MapSet.put(set, {a, a}) |> MapSet.put({a, b})
+    has_pair?([b | t], set)
+  end
+
+  def has_pair?([a, a, a | t], set) do
+    if MapSet.member?(set, {a, a}) do
+      true
+    else
+      has_pair?([a | t], MapSet.put(set, {a, a}))
+    end
+  end
+
+  def has_pair?([a, b | t], set) do
+    if MapSet.member?(set, {a, b}) do
+      true
+    else
+      has_pair?([b | t], MapSet.put(set, {a, b}))
+    end
+  end
+
+  def has_pair?(_, _) do
+    false
   end
 
   def has_vowels(string) do
