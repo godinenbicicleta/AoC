@@ -120,3 +120,6 @@ end
 
 Wire.solve("day7.txt")["a"]
 |> IO.inspect()
+
+Wire.solve2("day7.txt")["a"]
+|> IO.inspect()
