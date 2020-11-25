@@ -12,15 +12,38 @@ defmodule Table do
 
     sdict = sd |> Enum.map(fn {x, y} -> {x, Enum.into(y, %{})} end) |> Enum.into(%{})
 
-    perms =
-      ns
-      |> perm
-      |> flatten
-      |> Enum.map(fn x -> x ++ [hd(x)] end)
-      |> Enum.map(fn x -> Enum.zip(x, tl(x)) end)
-      |> Enum.map(&add_total(&1, sdict))
-      |> Enum.map(&Enum.sum/1)
-      |> Enum.max()
+    ns
+    |> perm
+    |> flatten
+    |> Enum.map(fn x -> x ++ [hd(x)] end)
+    |> Enum.map(fn x -> Enum.zip(x, tl(x)) end)
+    |> Enum.map(&add_total(&1, sdict))
+    |> Enum.map(&Enum.sum/1)
+    |> Enum.max()
+  end
+
+  def solve_me(file) do
+    contents = file |> read
+    sd = contents |> score_dict
+    sd = update_sd(sd)
+    ns = sd |> names
+
+    sdict = sd |> Enum.map(fn {x, y} -> {x, Enum.into(y, %{})} end) |> Enum.into(%{})
+
+    ns
+    |> perm
+    |> flatten
+    |> Enum.map(fn x -> x ++ [hd(x)] end)
+    |> Enum.map(fn x -> Enum.zip(x, tl(x)) end)
+    |> Enum.map(&add_total(&1, sdict))
+    |> Enum.map(&Enum.sum/1)
+    |> Enum.max()
+  end
+
+  def update_sd(sd) do
+    new = Enum.map(sd, fn {x, y} -> {x, [{"Bruno", 0} | y]} end) |> Enum.into(%{})
+    bruno_list = Enum.map(sd, fn {x, _} -> {x, 0} end)
+    Map.put(new, "Bruno", bruno_list)
   end
 
   def add_total(tuple_list, sd) do
@@ -98,3 +121,4 @@ defmodule Table do
 end
 
 Table.solve("day13.txt") |> IO.inspect()
+Table.solve_me("day13.txt") |> IO.inspect()
