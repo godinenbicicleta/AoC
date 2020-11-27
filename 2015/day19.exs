@@ -1,4 +1,57 @@
 defmodule Mole do
+  def solve2(file) do
+    [rules_string, molecule] =
+      File.read!(file)
+      |> String.trim()
+      |> String.split("\n\n", trim: true)
+
+    rules = parse(rules_string)
+
+    run(Enum.zip(Stream.cycle(["e"]), rules), rules, :cont, 0, molecule)
+  end
+
+  def run(_zip, _rules, :halt, steps, _molecule) do
+    steps
+  end
+
+  def run(lz, rules, :cont, steps, molecule) do
+    res =
+      Stream.map(lz, fn {word, rule} ->
+        mapply(rule, word)
+      end)
+      |> Stream.filter(fn x -> len(x) > 0 end)
+      |> Enum.map(&join/1)
+      |> List.flatten()
+      |> Stream.filter(fn x -> String.length(x) <= String.length(molecule) end)
+      |> Stream.uniq()
+      |> Enum.map(fn x -> [x] end)
+
+    if res == [] do
+      run(nil, nil, :halt, steps, molecule)
+    else
+      unless Enum.any?(res, fn r -> r == molecule end) do
+        m =
+          Enum.map(res, fn r ->
+            run(Enum.zip(Stream.cycle(r), rules), rules, :cont, steps + 1, molecule)
+          end)
+          |> List.flatten()
+          |> Enum.uniq()
+
+        m
+      else
+        run(nil, nil, :halt, steps, molecule)
+      end
+    end
+  end
+
+  def flat1(l = [h | t]) when is_list(h) do
+    flat1(h) ++ flat1(t)
+  end
+
+  def flat1(x) do
+    x
+  end
+
   def solve() do
     [rules_string, molecule] =
       File.read!("day19.txt")
@@ -18,7 +71,7 @@ defmodule Mole do
       |> MapSet.size()
   end
 
-  def len([h | t_]) when is_list(h) do
+  def len([h | _t]) when is_list(h) do
     length(h)
   end
 
