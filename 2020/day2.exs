@@ -3,40 +3,53 @@ defmodule Day2 do
   def run() do
     contents = File.read!("day2.txt")
 
-    parsed = Regex.scan(@re, contents)
+    parsed =
+      Regex.scan(@re, contents)
+      |> Enum.map(&parse_ints/1)
 
     parsed
-    |> Enum.reduce(0, &valid1/2)
+    |> Enum.reduce(0, &count_valids(&1, &2, :p1))
     |> IO.inspect()
 
     parsed
-    |> Enum.reduce(0, &valid2/2)
+    |> Enum.reduce(0, &count_valids(&1, &2, :p2))
     |> IO.inspect()
   end
 
-  def valid1([_, min, max, char, password], acc) do
-    min = String.to_integer(min)
-    max = String.to_integer(max)
-    {:ok, re} = Regex.compile(char)
-    len = length(Regex.scan(re, password))
+  def parse_ints([_, min, max, char, password]) do
+    {min, max} = {String.to_integer(min), String.to_integer(max)}
+    [min, max, char, password]
+  end
 
-    cond do
-      len >= min and len <= max -> acc + 1
-      true -> acc
+  def count_valids([min, max, char, password], acc, part) do
+    if valid?([min, max, char, password], part) do
+      acc + 1
+    else
+      acc
     end
   end
 
-  def valid2([_, one, two, char, password], acc) do
-    one = String.to_integer(one) - 1
-    two = String.to_integer(two) - 1
-    charlist = String.to_charlist(password)
-    [char_num] = String.to_charlist(char)
+  def valid?([min, max, char, password], :p1) do
+    {:ok, re} = Regex.compile(char)
+    len = length(Regex.scan(re, password))
 
-    case {Enum.at(charlist, one), Enum.at(charlist, two)} do
-      {^char_num, ^char_num} -> acc
-      {^char_num, _} -> acc + 1
-      {_, ^char_num} -> acc + 1
-      _ -> acc
+    if len >= min and len <= max do
+      true
+    else
+      false
+    end
+  end
+
+  def valid?([one, two, char, password], :p2) do
+    first = one - 1
+    second = two - 1
+    slices = {String.slice(password, first, 1), String.slice(password, second, 1)}
+
+    case slices do
+      {^char, ^char} -> false
+      {^char, _} -> true
+      {_, ^char} -> true
+      _ -> false
     end
   end
 end
