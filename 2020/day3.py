@@ -1,6 +1,6 @@
-NUM = 30000
+NUM = 100
 with open("day3.txt") as f:
-    lines = [row.strip() * 100 for row in f]
+    lines = [row.strip() * NUM for row in f]
 
 height_goal = len(lines)
 
