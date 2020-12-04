@@ -42,6 +42,10 @@ class Inventory:
                     self.ring2 = item
 
     @property
+    def cost(self):
+        return sum(k.cost for k in self.not_null)
+
+    @property
     def names(self):
         return tuple(
             sorted(
@@ -129,6 +133,13 @@ armors = [
         ("Platemail,102,0,5".split(",")),
     ]
 ]
+
+
+max_cost = (
+    sum(r.cost for r in rings)
+    + sum(w.cost for w in weapons)
+    + sum(a.cost for a in armors)
+)
 
 
 def get_inventories(gold):
@@ -226,29 +237,29 @@ while not won:
 
 print(gold)
 
+
+def get_strict_inventories(gold):
+    return [inv for inv in get_inventories(gold) if inv.cost == gold]
+
+
+res = {}
 glold = 0
 boss = Boss(8, 109, 2)
-used = set()
-while True:
+while gold <= max_cost:
     gold += 1
-    print(gold)
-    invs = get_inventories(gold)
+    invs = get_strict_inventories(gold)
     total_invs = len(invs)
-    new_invs = 0
     lost_inv = 0
     for inventory in invs:
-        if inventory in used:
-            continue
-        else:
-            new_invs += 1
-            used.add(inventory)
         if win(inventory, boss):
             continue
         else:
             lost_inv += 1
     if lost_inv == 0 and gold > 111:
-        print(f"all wins  with gold {gold} and {total_invs}")
-    elif lost_inv > 0 and gold > 111:
-        print(f"one lost at {gold}")
-    if new_invs == 0 and gold > 111:
-        break
+        continue
+    else:
+        print(f"some lost at {gold}")
+    if lost_inv:
+        res[gold] = lost_inv
+
+print(max(res.keys()))
