@@ -17,9 +17,12 @@ defmodule Day5 do
   end
 
   def decode(string) do
-    [row, column] = to_row_column(string)
-    row * 8 + column
+    string
+    |> to_row_column
+    |> to_id
   end
+
+  def to_id([row, col]), do: row * 8 + col
 
   def to_row_column(string) do
     [{0..6, 0..127}, {7..9, 0..7}]
