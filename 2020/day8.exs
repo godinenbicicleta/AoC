@@ -16,6 +16,7 @@ defmodule Day8 do
 
   def run(ops, :one), do: run(ops, MapSet.new(), 0, 0)
   def run(ops, :two), do: run_with_flips(ops, 0)
+
   def run(ops, _seen, ix, acc) when not is_map_key(ops, ix), do: IO.puts(acc)
 
   def run(ops, seen, ix, acc) do
