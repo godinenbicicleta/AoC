@@ -1,8 +1,27 @@
 from collections import deque
 
-
 with open("day9.txt") as f:
     data = [int(line) for line in f]
+
+
+class TotalQueue:
+    def __init__(self):
+        self._q = deque()
+        self._total = 0
+
+    @property
+    def total(self):
+        return self._total
+
+    def append(self, num):
+        self._q.append(num)
+        self._total += num
+
+    def popleft(self):
+        self._total -= self._q.popleft()
+
+    def __iter__(self):
+        return iter(self._q)
 
 
 def run():
@@ -21,12 +40,12 @@ def run():
 
 
 def locate(target):
-    deq = deque()
+    deq = TotalQueue()
     for num in data:
         deq.append(num)
-        if sum(deq) == target:
+        if deq.total == target:
             return list(deq)
-        while sum(deq) > target:
+        while deq.total > target:
             deq.popleft()
 
 
