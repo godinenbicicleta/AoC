@@ -1,12 +1,9 @@
-from collections import deque
 from collections import Counter
 import functools
 import itertools
 
 with open("day10.txt") as f:
     data = [int(line.strip()) for line in f]
-
-chain = [0]
 
 
 def run():
@@ -45,7 +42,6 @@ def to_chunks(data):
     for i in range(len(data)):
         if not current_chunk:
             current_chunk.append(data[i])
-
         elif data[i] - current_chunk[-1] <= 3:
             current_chunk.append(data[i])
         else:
@@ -62,11 +58,8 @@ def find_solutions(data, to_remove, removed):
     elem = to_remove.pop()
     res = []
     if can_remove(elem, data):
-
-        for sol in find_solutions(data - {elem}, to_remove - {elem}, removed | {elem}):
-            res.append(sol)
-    for sol in find_solutions(data, to_remove - {elem}, removed):
-        res.append(sol)
+        res.extend(find_solutions(data - {elem}, to_remove - {elem}, removed | {elem}))
+    res.extend(find_solutions(data, to_remove - {elem}, removed))
     return res
 
 
@@ -80,17 +73,6 @@ def can_remove(elem, data):
         return True
 
     return False
-
-
-def is_valid(sol):
-    solution = tuple(sorted(sol))
-
-    res = True
-    for i in range(1, len(solution)):
-        if solution[i] - solution[i - 1] > 3:
-            res = False
-            break
-    return res
 
 
 if __name__ == "__main__":
