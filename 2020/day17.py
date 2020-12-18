@@ -47,6 +47,15 @@ def run(env):
         if value == "#":
             total += 1
     print(total)
+    print(len(l))
+    print("max x: ", max(l.keys(), key=lambda x: x[0]))
+    print("min x: ", min(l.keys(), key=lambda x: x[0]))
+    print("max y: ", max(l.keys(), key=lambda x: x[1]))
+    print("min y: ", min(l.keys(), key=lambda x: x[1]))
+    print("max z: ", max(l.keys(), key=lambda x: x[2]))
+    print("min z: ", min(l.keys(), key=lambda x: x[2]))
+    print("max w: ", max(l.keys(), key=lambda x: x[3]))
+    print("min w: ", min(l.keys(), key=lambda x: x[3]))
 
 
 def cycle(layer, num, neighbors):
