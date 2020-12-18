@@ -1,7 +1,8 @@
-from collections import deque, Counter
-from functools import reduce
 import math
 import operator
+import re
+from collections import deque
+
 
 """
 2 * 3 + (4 * 5) becomes 26.
@@ -34,37 +35,26 @@ def run(env):
 
 
 def parse2(line):
-    print("parse ", line)
     res = evaluate_brackets(line)
-    print("res: ", res)
     return res
 
 
-import re
-
-
 def evaluate_mult(line):
-    print("mult", line)
     nums = [int(i) for i in line if i != "*"]
     return [math.prod(nums)]
 
 
 def evaluate_addition(line):
-    print("add", line)
     if not re.findall(r"\+", ",".join([str(i) for i in line])):
         return evaluate_mult(line)
     else:
-        print(line)
         s = [line[0]]
-        l = list(line[1:])
+        l = deque(line[1:])
         while True:
-            char = l.pop(0)
+            char = l.popleft()
             if char == "+":
-                print("s: ", s)
-                print("l: ", l)
                 left = s.pop()
-                print("char2: ", char, end=" ")
-                right = l.pop(0)
+                right = l.popleft()
                 s.append(operator.add(int(left), int(right)))
             else:
                 s.append(char)
@@ -77,21 +67,19 @@ def evaluate_brackets(line_):
 
     if not re.findall(r"\(", ",".join([str(i) for i in line_])):
         return evaluate_addition(line_)
-    print("brackets, ", line_)
 
     s = []
 
-    line = list(line_)
+    line = deque(list(line_))
     while line:
-        char = line.pop(0)
+        char = line.popleft()
         if char != "(" and char != ")":
             s.append(char)
         elif char == "(":
             p = 0
             sub = []
             while line:
-                c = line.pop(0)
-                # print(c)
+                c = line.popleft()
                 if c == ")" and p == 0:
                     s.extend(parse2(sub))
                     break
@@ -109,7 +97,6 @@ def evaluate_brackets(line_):
 def parse(line):
     res = []
     for char in line:
-        print("char: ", char, "=>", res)
 
         if char.isdigit():
 
