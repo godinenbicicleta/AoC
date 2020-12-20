@@ -4,6 +4,10 @@ def run(env):
         fname = "day19.txt"
     elif env == 0:
         fname = "day19_test.txt"
+    elif env == 2:
+        fname = "day19_test2.txt"
+    elif env == 3:
+        fname = "day19_sergio.txt"
     else:
         raise FileNotFoundError
     with open(fname) as f:
@@ -42,6 +46,78 @@ def run(env):
 
     messages = set(messages.split("\n"))
     print(len(valids & messages))
+
+    max_len = max(messages, key=lambda x: len(x))
+    print(f"==max_len== {max_len}")
+
+    # print("8", set(cache["8"]))
+    # print("42", set(cache["42"]))
+    # print("11", set(cache["11"]))
+    # print("31", set(cache["31"]))
+
+    # i = 0
+    # while i < 3:
+    #     print("prefix: ", i)
+    #     new_valids = set()
+    #     for string in cache["42"]:
+    #         for s in extended_valids:
+    #             new_valids.add(string + s)
+    #     extended_valids = new_valids
+    #     i += 1
+    #
+    # i = 0
+    # while i < 3:
+    #     print("suffix: ", i)
+    #     new_valids = set()
+    #     for string in cache["31"]:
+    #         for s in extended_valids:
+    #             new_valids.add(s + string)
+    #     extended_valids = new_valids
+    #     i += 1
+
+    # print(len(extended_valids & messages))
+
+    more_valids = 0
+    for ix, message in enumerate(sorted(messages)):
+        # print("checking", ix, message)
+        if message in valids:
+            # print("is valid: ", original)
+            more_valids += 1
+            continue
+
+        if not any(message.startswith(string) for string in cache["42"]):
+            continue
+
+        if not any(message.endswith(string) for string in cache["31"]):
+            continue
+
+        num42 = 0
+        num31 = 0
+        while any(message.startswith(string) for string in cache["42"]):
+            for string in cache["42"]:
+                if message.startswith(string):
+                    message = message[len(string) :]
+                    num42 += 1
+        if not any(message.endswith(string) for string in cache["31"]):
+            continue
+        while any(message.startswith(string) for string in cache["31"]):
+            for string in cache["31"]:
+                if message.startswith(string):
+                    message = message[len(string) :]
+                    num31 += 1
+
+        if (num42 >= 3 and num31 >= 1) and (num42 > num31) and not message:
+            more_valids += 1
+        else:
+            print("42:", num42, "31:", num31)
+
+    print(more_valids)
+
+    # print(any("aaaabbaaaabbaaa".endswith(string) for string in cache["31"]))
+
+    # 0: 8 | 11
+
+    # l1 = 42 |
 
 
 cache = {}
@@ -114,5 +190,9 @@ def join(list_of_lists):
 
 if __name__ == "__main__":
     # aaaabb, aaabab, abbabb, abbbab, aabaab, aabbbb, abaaab, or ababbb.
-    # run(0)
+    # run(3)
     run(1)
+    # run(2)
+    # 282 no
+
+    # 403 too high
