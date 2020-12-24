@@ -23,8 +23,8 @@ class DoublyLinkedList:
         self.values = [None] * (size + 1)
         for num in nums:
             self.append(num)
-        self.possible_max = [size - x for x in range(0, 4)]
-        self.possible_min = [1 + x for x in range(0, 4)]
+        self.possible_max = tuple((size - x for x in range(0, 4)))
+        self.possible_min = tuple((1 + x for x in range(0, 4)))
 
     @property
     def empty(self):
