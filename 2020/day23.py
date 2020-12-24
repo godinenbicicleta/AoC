@@ -1,28 +1,31 @@
+import time
+
 TEST = "389125467"
 PROD = "362981754"
 
 
 class Node:
-    __slots__ = ("_element", "prev", "next")
+    __slots__ = ("element", "prev", "next")
 
     def __init__(self, element, predecessor, successor):
-        self._element = element
+        self.element = element
         self.next = successor
         self.prev = predecessor
-
-    @property
-    def element(self):
-        return self._element
 
     def __repr__(self):
         return f"Node({self.element})"
 
 
 class DoublyLinkedList:
-    def __init__(self):
+    def __init__(self, nums):
         self.tail = None
         self._size = 0
-        self.values = set()
+        self.values = {}
+        for num in nums:
+            self.append(num)
+        sorted_nums = sorted(nums)
+        self.possible_max = sorted_nums[-6:][::-1]
+        self.possible_min = sorted_nums[:6]
 
     @property
     def empty(self):
@@ -32,26 +35,26 @@ class DoublyLinkedList:
         return self._size
 
     def __contains__(self, element):
-        return element in self.values
+        return self.values[element] is not None
 
-    def find(self, element, start=None):
-        if start is None:
-            node = self.first()
-        else:
-            node = start.next
-        while True:
-            prev_node = node
-            if node.element == element:
-                return node
-            node = node.next
-            if node == prev_node:
-                raise ValueError
+    def find(self, element):
+        return self.values[element]
 
+    @property
     def max(self):
-        return max(self.values)
+        for num in self.possible_max:
+            if self.values.get(num) is not None:
+                return num
+        else:
+            raise ValueError(self.possible_max, self.values)
 
+    @property
     def min(self):
-        return min(self.values)
+        for num in self.possible_min:
+            if self.values.get(num) is not None:
+                return num
+        else:
+            raise ValueError(self.possible_max, self.values)
 
     def first(self):
         if self.empty:
@@ -82,7 +85,7 @@ class DoublyLinkedList:
             self.tail = new_node
 
         self._size += 1
-        self.values.add(element)
+        self.values[element] = new_node
         return new_node
 
     def append_after(self, element, node):
@@ -95,7 +98,7 @@ class DoublyLinkedList:
             predecessor.next = new_node
             successor.prev = new_node
             self._size += 1
-            self.values.add(element)
+            self.values[element] = new_node
             return new_node
 
     def append_left(self, element):
@@ -111,15 +114,15 @@ class DoublyLinkedList:
             self.tail.next = new_node
             old_head.prev = new_node
         self._size += 1
-        self.values.add(element)
+        self.values[element] = new_node
         return new_node
 
     def delete_node(self, node):
         if self.empty:
             raise ValueError("Empty")
         element = node.element
+        self.values[element] = None
         self._size -= 1
-        self.values.remove(element)
         if self.empty:
             self._tail = None
         elif self.tail == node:
@@ -133,6 +136,7 @@ class DoublyLinkedList:
             next_ = node.next
             prev.next = next_
             next_.prev = prev
+        node.next = node.prev = node.element = None
         return element
 
     def pop_after(self, node, num):
@@ -143,13 +147,6 @@ class DoublyLinkedList:
 
     def pop_left(self):
         return self.delete_node(self.tail.next)
-
-    @classmethod
-    def from_list(cls, nums):
-        dl = cls()
-        for num in nums:
-            dl.append(num)
-        return dl
 
     def __iter__(self):
         if self.empty:
@@ -164,38 +161,36 @@ class DoublyLinkedList:
         return f'[ {" ".join(map(lambda x: str(x.element), iter(self)))} ]'
 
 
-def find_destination_node(dl, start, destination_label):
-    if destination_label in dl:
-        destination_node = dl.find(destination_label, start)
-    elif destination_label < dl.min():
-        # print("to_find: ", dl.max())
-        destination_node = dl.find(dl.max(), start)
+def find_destination_node(dl, destination_label):
+    if destination_label < dl.min:
+        destination_node = dl.find(dl.max)
+    elif destination_label in dl:
+        destination_node = dl.find(destination_label)
     else:
-        return find_destination_node(dl, start, destination_label - 1)
+        while True:
+            destination_label -= 1
+            if destination_label in dl:
+                return dl.find(destination_label)
     return destination_node
 
 
 def run(nums, moves=3):
-    cups = DoublyLinkedList.from_list(nums)
+    cups = DoublyLinkedList(nums)
     # print(cups)
     current = cups.first()
     print("started")
     for move in range(1, moves + 1):
-        if moves < 10:
-            print(f"--------- move {move} ---------")
+        # if moves < 10:
+        #    print(f"--------- move {move} ---------")
 
-        if move % 100 == 0:
-            print(f"--------- move {move/moves} ---------")
+        # if move % 100000 == 0:
+        #    print(f"--------- move {move/moves} ---------")
         # print(f"--------- move {move} ---------")
         # print("cups: ", cups)
         # print("current: ", current)
-        # print("to_pick_up: =", current.next, current.next.next, current.next.next.next)
         pick_up = cups.pop_after(current, 3)
-        # print("pick up: ", pick_up)
         destination_label = current.element - 1
-        # print("destination_label: ", destination_label)
-        destination_node = find_destination_node(cups, current, destination_label)
-        # print("destination_label_found: ", destination_node.element)
+        destination_node = find_destination_node(cups, destination_label)
         after = destination_node
         for ix in range(3):
             after = cups.append_after(pick_up[ix], after)
@@ -204,10 +199,10 @@ def run(nums, moves=3):
         print("----- final -----")
         print("cups: ", cups)
     else:
-        one = cups.find(cups.first(), 1)
+        one = cups.find(1)
         print(one.next)
         print(one.next.next)
-        print(one.next * one.next.next)
+        print(one.next.element * one.next.next.element)
 
 
 def big_list(string):
@@ -228,5 +223,12 @@ def big_list(string):
 
 if __name__ == "__main__":
     run(list(map(int, TEST)), 100)
-    run(list(map(int, PROD)), 100)
+    t0 = time.time()
+    run(list(map(int, PROD)), 101)
+    print(time.time() - t0)
+    t0 = time.time()
     run(big_list(TEST), 10000000)
+    print(time.time() - t0)
+    t0 = time.time()
+    run(big_list(PROD), 10000000)
+    print(time.time() - t0)
