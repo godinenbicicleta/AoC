@@ -17,15 +17,14 @@ class Node:
 
 
 class DoublyLinkedList:
-    def __init__(self, nums):
+    def __init__(self, nums, size=9):
         self.tail = None
         self._size = 0
-        self.values = {}
+        self.values = [None] * (size + 1)
         for num in nums:
             self.append(num)
-        sorted_nums = sorted(nums)
-        self.possible_max = sorted_nums[-6:][::-1]
-        self.possible_min = sorted_nums[:6]
+        self.possible_max = [size - x for x in range(0, 4)]
+        self.possible_min = [1 + x for x in range(0, 4)]
 
     @property
     def empty(self):
@@ -43,7 +42,7 @@ class DoublyLinkedList:
     @property
     def max(self):
         for num in self.possible_max:
-            if self.values.get(num) is not None:
+            if self.values[num] is not None:
                 return num
         else:
             raise ValueError(self.possible_max, self.values)
@@ -51,7 +50,7 @@ class DoublyLinkedList:
     @property
     def min(self):
         for num in self.possible_min:
-            if self.values.get(num) is not None:
+            if self.values[num] is not None:
                 return num
         else:
             raise ValueError(self.possible_max, self.values)
@@ -88,18 +87,35 @@ class DoublyLinkedList:
         self.values[element] = new_node
         return new_node
 
-    def append_after(self, element, node):
+    def append_node(self, new_node):
+        """Assuming list is not empty and has more than 1 element
+        """
+        head = self.tail.next
+        old_tail = self.tail
+        new_node.next = head
+        new_node.prev = old_tail
+
+        head.prev = new_node
+        old_tail.next = new_node
+        self.tail = new_node
+
+        self._size += 1
+        self.values[new_node.element] = new_node
+        return new_node
+
+    def append_after(self, element_node, node):
         if node == self.tail:
-            return self.append(element)
+            return self.append_node(element_node)
         else:
             predecessor = node
             successor = node.next
-            new_node = Node(element, predecessor, successor)
-            predecessor.next = new_node
-            successor.prev = new_node
+            element_node.next = successor
+            element_node.prev = predecessor
+            predecessor.next = element_node
+            successor.prev = element_node
             self._size += 1
-            self.values[element] = new_node
-            return new_node
+            self.values[element_node.element] = element_node
+            return element_node
 
     def append_left(self, element):
         new_node = Node(element, None, None)
@@ -136,8 +152,8 @@ class DoublyLinkedList:
             next_ = node.next
             prev.next = next_
             next_.prev = prev
-        node.next = node.prev = node.element = None
-        return element
+        node.next = node.prev = None
+        return node
 
     def pop_after(self, node, num):
         return [self.delete_node(node.next) for _ in range(num)]
@@ -174,8 +190,8 @@ def find_destination_node(dl, destination_label):
     return destination_node
 
 
-def run(nums, moves=3):
-    cups = DoublyLinkedList(nums)
+def run(nums, size, moves=3):
+    cups = DoublyLinkedList(nums, size)
     # print(cups)
     current = cups.first()
     print("started")
@@ -210,25 +226,24 @@ def big_list(string):
     print(nums)
     max_num = max(nums)
     next_num = max_num + 1
-    big_nums = [None] * 1000000
     for ix, num in enumerate(nums):
-        big_nums[ix] = num
-    ix += 1
-    while next_num < 1000001:
-        big_nums[ix] = next_num
+        yield num
+    while next_num < 1_000_001:
+        yield next_num
         next_num += 1
-        ix += 1
-    return big_nums
 
 
 if __name__ == "__main__":
-    run(list(map(int, TEST)), 100)
+    one = list(map(int, TEST))
+    run(one, len(one), 100)
     t0 = time.time()
-    run(list(map(int, PROD)), 101)
+    two = list(map(int, PROD))
+    run(two, len(two), 101)
     print(time.time() - t0)
     t0 = time.time()
-    run(big_list(TEST), 10000000)
+    run(big_list(TEST), 1_000_000, 10_000_000)
     print(time.time() - t0)
     t0 = time.time()
-    run(big_list(PROD), 10000000)
+    run(big_list(PROD), 1_000_000, 10_000_000)
     print(time.time() - t0)
+    # 12757828710
