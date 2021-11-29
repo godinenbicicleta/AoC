@@ -78,6 +78,9 @@ try do
 
     case res do
       19_690_720 ->
+        IO.puts(a)
+        IO.puts(b)
+
         (100 * a + b)
         |> IO.inspect()
 
