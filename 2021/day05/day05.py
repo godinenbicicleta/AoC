@@ -1,27 +1,38 @@
 import fileinput
 from collections import defaultdict
+from itertools import product
 
 d1 = defaultdict(int)
 d2 = defaultdict(int)
-for line in fileinput.input():
-    in_d1 = True
+
+
+def delta(start, end):
+    return 1 if end > start else -1
+
+
+def parse(line):
     start, end = line.split(" -> ")
     start_x, start_y = [int(n) for n in start.split(",")]
     end_x, end_y = [int(n) for n in end.split(",")]
-    deltax = 1 if end_x > start_x else -1
-    deltay = 1 if end_y > start_y else -1
-    if start_x != end_x and start_y != end_y:
-        for i, j in zip(
-            range(start_x, end_x + deltax, deltax),
-            range(start_y, end_y + deltay, deltay),
-        ):
-            d2[(j, i)] += 1
+    return start_x, end_x, start_y, end_y
 
-    else:
-        for i in range(start_x, end_x + deltax, deltax):
-            for j in range(start_y, end_y + deltay, deltay):
-                d1[(j, i)] += 1
-                d2[(j, i)] += 1
+
+for line in fileinput.input():
+    start_x, end_x, start_y, end_y = parse(line)
+    deltax = delta(start_x, end_x)
+    deltay = delta(start_y, end_y)
+    x_range = range(start_x, end_x + deltax, deltax)
+    y_range = range(start_y, end_y + deltay, deltay)
+    diagonal = zip(x_range, y_range)
+    vertical_horizontal = product(x_range, y_range)
+
+    if start_x == end_x or start_y == end_y:
+        for i, j in vertical_horizontal:
+            d1[(j, i)] += 1
+            d2[(j, i)] += 1
+        continue
+    for i, j in diagonal:
+        d2[(j, i)] += 1
 
 for d in (d1, d2):
     counter = 0
