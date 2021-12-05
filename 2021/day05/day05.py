@@ -3,7 +3,6 @@ from collections import defaultdict
 
 d1 = defaultdict(int)
 d2 = defaultdict(int)
-is_d1 = True
 for line in fileinput.input():
     in_d1 = True
     start, end = line.split(" -> ")
