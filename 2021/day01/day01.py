@@ -1,14 +1,13 @@
-with open("input01.txt") as f:
-    data = [int(k) for k in f]
+import fileinput
+
+data = [int(k) for k in fileinput.input()]
 
 
 def window1():
     inc = 0
-    prev = data[0]
-    for num in data[1:]:
-        if num > prev:
+    for prev, current in zip(data, data[1:]):
+        if current > prev:
             inc += 1
-        prev = num
     print(inc)
 
 
@@ -31,5 +30,5 @@ def window3(data):
 
 
 if __name__ == "__main__":
-    window1()
-    window3(data[:])
+    window1()  # 1400
+    window3(data[:])  # 1429
