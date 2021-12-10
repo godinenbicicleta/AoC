@@ -36,4 +36,4 @@ for line in fileinput.input():
 
 print(total)
 incomplete.sort()
-print(incomplete[len(incomplete) // 2 : len(incomplete) // 2 + 1])
+print(incomplete[len(incomplete) // 2])
