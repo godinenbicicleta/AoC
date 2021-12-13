@@ -60,7 +60,6 @@ def apply(fold, grid):
             for y in range(miny, maxy + 1):
                 if grid[(x, y)] == ".":
                     continue
-                #                 print(f"{(x,y)} goes to {(x, fold.value - i - 1)}")
                 grid[(fold.value - i - 1), y] = grid[(x, y)]
                 grid[(x, y)] = "."
 
@@ -80,12 +79,9 @@ def p1(grid):
 
 
 def p2(grid):
-    # print_grid(grid)
     grid = grid.copy()
     for fold in folds:
-        # print("fold", fold)
         apply(fold, grid)
-        # print_grid(grid)
     return grid
 
 
