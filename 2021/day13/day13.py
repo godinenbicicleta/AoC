@@ -69,12 +69,9 @@ def count(grid):
 
 
 def p1(grid):
-    # print_grid(grid)
     grid = grid.copy()
     for fold in folds[:1]:
-        # print("fold", fold)
         apply(fold, grid)
-        # print_grid(grid)
     print(count(grid))
 
 
