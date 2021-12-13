@@ -18,13 +18,13 @@ def print_grid(grid):
     (minx, maxx), (miny, maxy) = min_max(grid)
     for y in range(miny, maxy + 1):
         for x in range(minx, maxx + 1):
-            print(grid[(x, y)] if grid[(x, y)] == "#" else " ", end="")
+            print(grid[(x, y)], end="")
         print()
     print()
 
 
 raw_dots, raw_folds = data.strip().split("\n\n")
-grid = defaultdict(lambda: ".")
+grid = defaultdict(lambda: " ")
 folds = []
 
 for dot_line in raw_dots.strip().split("\n"):
@@ -50,18 +50,18 @@ def apply(fold, grid):
     if fold.axis == "y":
         for j, y in enumerate(range(fold.value + 1, maxy + 1)):
             for x in range(minx, maxx + 1):
-                if grid[(x, y)] == ".":
+                if grid[(x, y)] == " ":
                     continue
                 grid[(x, fold.value - j - 1)] = grid[(x, y)]
-                grid[(x, y)] = "."
+                grid[(x, y)] = " "
 
     elif fold.axis == "x":
         for i, x in enumerate(range(fold.value + 1, maxx + 1)):
             for y in range(miny, maxy + 1):
-                if grid[(x, y)] == ".":
+                if grid[(x, y)] == " ":
                     continue
                 grid[(fold.value - i - 1), y] = grid[(x, y)]
-                grid[(x, y)] = "."
+                grid[(x, y)] = " "
 
 
 def count(grid):
