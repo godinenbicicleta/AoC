@@ -18,7 +18,7 @@ def print_grid(grid):
     (minx, maxx), (miny, maxy) = min_max(grid)
     for y in range(miny, maxy + 1):
         for x in range(minx, maxx + 1):
-            print(grid[(x, y)], end="")
+            print(grid[(x, y)] if grid[(x, y)] == "#" else " ", end="")
         print()
     print()
 
