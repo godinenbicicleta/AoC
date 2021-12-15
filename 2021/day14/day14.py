@@ -10,14 +10,17 @@ instructions = dict(tuple(k.split(" -> ")) for k in instructions.strip().split("
 memo = {}
 
 
+def grow(m):
+    return f"{m[0]}{instructions[m]}{m[1]}"
+
+
 def process(m, turns):
     if (m, turns) in memo:
         return memo[(m, turns)]
     if turns == 0 or len(m) == 1:
         res = Counter(m)
     elif len(m) == 2:
-        n = instructions[m]
-        res = process(f"{m[0]}{n}{m[1]}", turns - 1)
+        res = process(grow(m), turns - 1)
     else:
         res = process(m[:2], turns) + process(m[1:], turns) - Counter(m[1])
     memo[(m, turns)] = res
