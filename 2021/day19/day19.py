@@ -310,9 +310,10 @@ def distance(a, b):
     return abs(p1.x - p2.x) + abs(p1.y - p2.y) + abs(p1.z - p2.z)
 
 
-for scanner in scanners:
-    for scanner2 in scanners:
-        d = distance(scanner, scanner2)
+for ix, scanner in enumerate(scanners):
+    for jx, scanner2 in enumerate(scanners):
+
+        d = distance(ix, jx)
         if d > maxDistance:
             maxDistance = d
 print(maxDistance)
