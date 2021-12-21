@@ -1,4 +1,7 @@
 import sys
+import time
+
+t0 = time.time()
 
 with open(sys.argv[1]) as f:
     data = f.read().strip()
@@ -69,3 +72,4 @@ print(len([k for k in new_img.values() if k == "#"]))
 
 new_img = run(img, algo, 50)
 print(len([k for k in new_img.values() if k == "#"]))
+print(time.time() - t0)
