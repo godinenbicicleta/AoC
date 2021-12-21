@@ -1,10 +1,13 @@
 import math
 import sys
-from collections import defaultdict, deque
+import time
+from collections import defaultdict
 from enum import Enum
 from functools import partial
 from itertools import chain
 from typing import NamedTuple
+
+t0 = time.time()
 
 
 class Axis(Enum):
@@ -151,13 +154,6 @@ def match2(l1, l2):
             yield c, ref
 
 
-class End(Exception):
-    pass
-
-
-common = defaultdict(set)
-
-
 def match(i, j):
     s1 = scanners[i]
     s2 = scanners[j]
@@ -173,9 +169,6 @@ def match(i, j):
                     seen.add(c)
                     counts[c].add((l1, l2))
                     refs[c].add(ref)
-                    if len(counts[c]) == 12:
-                        for x, y in counts[c]:
-                            common[j].add(y)
 
     s = sorted(counts.items(), key=lambda x: x[1], reverse=True)
     s = [m for m in s if len(m[1]) >= 12]
@@ -305,3 +298,4 @@ for ix, scanner in enumerate(scanners):
         if d > maxDistance:
             maxDistance = d
 print(maxDistance)
+print(time.time() - t0)
