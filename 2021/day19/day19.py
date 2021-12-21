@@ -179,10 +179,8 @@ def match(i, j):
 
     s = sorted(counts.items(), key=lambda x: x[1], reverse=True)
     s = [m for m in s if len(m[1]) >= 12]
-    assert len(s) < 2, print(s)
     if s:
         point = s[0][0]
-        assert len(refs[point]) == 1, f"{refs[point]}, ({point})"
         ref = refs[point].pop()
         return point, ref
 
@@ -223,7 +221,6 @@ def run(scanners):
 
     i = 0
     while len(positions) != len(scanners):
-        print(len(positions))
         for j in range(1, len(scanners)):
 
             if i == j or (i, j) in seen:
@@ -238,10 +235,7 @@ def run(scanners):
         positions[j] = sorted(positions[j], key=lambda x: x[2])
 
     new_positions = {0: Point(0, 0, 0)}
-    print("translating")
-    print(positions)
     while not len(new_positions) == len(positions):
-        print("solved", len(new_positions))
         for k, references in positions.items():
             if k in new_positions:
                 continue
@@ -257,7 +251,6 @@ def run(scanners):
             point, res_path = solve(solved_refs, new_positions, positions)
             new_positions[k] = point
             paths[k] = res_path
-    print()
     return positions, new_positions, paths
 
 
@@ -285,10 +278,6 @@ def solve(arr, new_positions, positions):
 
 totalPoints = set()
 positions, new_positions, paths = run(scanners)
-print("done running scanners")
-print(new_positions)
-print("built list")
-print(paths)
 for ix, s in enumerate(scanners):
     for point in s:
         if ix == 0:
@@ -298,7 +287,6 @@ for ix, s in enumerate(scanners):
             new_point = convert(point, ref_point, ref_frame)
             point = new_point
         totalPoints.add(point)
-print()
 print(len(totalPoints))
 
 maxDistance = 0
