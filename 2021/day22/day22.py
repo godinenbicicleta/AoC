@@ -1,7 +1,5 @@
 import fileinput
 import re
-from collections import defaultdict
-from functools import reduce
 
 data = {}
 parsed = []
@@ -150,14 +148,9 @@ def union(sets):
             parts = new_parts
         res.extend(union(parts))
 
-        # s = s intersection (s intersection r)C
-
     return res
 
 
-# (xmin, xmax, ymin, ymax, zmin, zmax) = p
-# totalCount += vals(xmin, xmax) * vals(ymin, ymax) * vals(zmin, zmax)
-# a-b = a int bc
 current = []
 for i, (p, v) in enumerate(parsed):
     if not current:
@@ -189,7 +182,6 @@ def total_size(arr):
     return total
 
 
-# too low 22163424478263
 total = 0
 for i in union(current):
     total += size(i)
