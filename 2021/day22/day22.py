@@ -151,6 +151,19 @@ def union(sets):
     return res
 
 
+def size(p):
+    (xmin, xmax, ymin, ymax, zmin, zmax) = p
+    res = vals(xmin, xmax) * vals(ymin, ymax) * vals(zmin, zmax)
+    return res
+
+
+def total_size(arr):
+    total = 0
+    for i in union(arr):
+        total += size(i)
+    return total
+
+
 current = []
 for i, (p, v) in enumerate(parsed):
     if not current:
@@ -168,21 +181,4 @@ for i, (p, v) in enumerate(parsed):
         ]
     )
 
-
-def size(p):
-    (xmin, xmax, ymin, ymax, zmin, zmax) = p
-    res = vals(xmin, xmax) * vals(ymin, ymax) * vals(zmin, zmax)
-    return res
-
-
-def total_size(arr):
-    total = 0
-    for i in union(arr):
-        total += size(i)
-    return total
-
-
-total = 0
-for i in union(current):
-    total += size(i)
-print(total)
+print(total_size(current))
