@@ -1,5 +1,7 @@
-from collections import Counter, defaultdict
-from functools import lru_cache
+import time
+from collections import defaultdict
+
+t0 = time.time()
 
 
 def dice():
@@ -54,7 +56,6 @@ def play(games_counter):
     done_games = defaultdict(int)
     while games_counter:
         turns += 1
-        print(turns)
         new_games = defaultdict(int)
         for game, count in games_counter.items():
             gs, done = play_one(game, count)
@@ -64,8 +65,6 @@ def play(games_counter):
                 done_games[g] += c
 
         games_counter = new_games
-        current, d = sum(games_counter.values()), sum(done_games.values())
-        print("games: ", current, d, current + d)
     return done_games
 
 
@@ -124,4 +123,5 @@ for g, c in done_games.items():
         score[1] += c
     else:
         score[2] += c
+print(time.time() - t0)
 print(score)
