@@ -274,6 +274,9 @@ add z y
 """
 
 
+t0 = time.time()
+
+
 def run():
     arr = []
     current = []
@@ -333,6 +336,7 @@ zs[0] = {0}
 zs[13] = set(range(30))
 zs[12] = set(range(1000))
 for i in range(1, 12):
+    print(i)
     for w in range(1, 10):
         for z in zs[i - 1]:
             res = runs[i - 1](w, z)["z"]
@@ -343,6 +347,7 @@ goals = defaultdict(set)
 goals[13] = {0}
 ws = defaultdict(set)
 for i in range(13, -1, -1):
+    print(i)
     for w in range(1, 10):
         for z in zs[i]:
             res = runs[i](w, z)["z"]
@@ -362,13 +367,15 @@ def solves(i=13, goal=0, ww=None):
             res = prog(w, z)
             if res["z"] == goal:
                 if i == 0:
-                    print((w,) + ww)
                     solutions.add(int("".join(map(str, (w,) + ww))))
                 else:
                     solves(i - 1, z, (w,) + ww)
 
 
 if __name__ == "__main__":
+    import time
+
     solves()
     sorted_sols = sorted(solutions)
     print(sorted_sols[-1], sorted_sols[0])
+    print(time.time() - t0)
