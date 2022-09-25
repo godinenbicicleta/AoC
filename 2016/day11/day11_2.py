@@ -180,7 +180,7 @@ def solve(p: State) -> State:
 if __name__ == "__main__":
     import time
 
-    for i in (input0, input1):
+    for i in (input0, input1, input2):
         t0 = time.time()
         solve(parse(i))
         print("elapsed_time", time.time() - t0)
