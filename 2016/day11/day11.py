@@ -113,9 +113,7 @@ def comb2(s):
     if len(s) < 2:
         return []
     if len(s) == 2:
-        return [
-            s,
-        ]
+        return [s]
     return [(s[0], k) for k in s[1:]] + comb2(s[1:])
 
 
