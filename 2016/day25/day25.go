@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-func run(a int, lines [][]string) {
+func run(a int, lines [][]string) []int {
+	res := []int{}
 	registers := map[string]int{
 		"a": a, "b": 0, "c": 0, "d": 0,
 	}
@@ -22,9 +23,10 @@ func run(a int, lines [][]string) {
 	}
 	for index < len(lines) {
 		parts := lines[index]
-		if index == 18 {
-			fmt.Println(registers)
+		if len(res) > 100 {
+			return res
 		}
+
 		switch parts[0] {
 		case "cpy":
 			val := parser(parts[1])
@@ -52,10 +54,21 @@ func run(a int, lines [][]string) {
 				lines[index+val] = newInstruction
 			}
 			index++
+		case "out":
+			val := parser(parts[1])
+			if val == 0 || val == 1 {
+				if len(res) > 1 && res[len(res)-1] == val {
+					return []int{}
+				}
+				res = append(res, val)
+			} else {
+				return []int{}
+			}
+			index++
 		}
-	}
 
-	fmt.Println(registers)
+	}
+	return []int{}
 }
 
 func toggle(parts []string) []string {
@@ -69,6 +82,8 @@ func toggle(parts []string) []string {
 	case "jnz":
 		return []string{"cpy", parts[1], parts[2]}
 	case "tgl":
+		return []string{"inc", parts[1]}
+	case "out":
 		return []string{"inc", parts[1]}
 	}
 	os.Exit(1)
@@ -84,5 +99,15 @@ func main() {
 		lines = append(lines, parts)
 	}
 
-	run(12, lines)
+	for i := 0; ; i++ {
+		res := run(i, lines)
+		if i%10000 == 0 {
+			fmt.Println(i)
+		}
+		if len(res) > 0 {
+			fmt.Println("DONE", i)
+			os.Exit(0)
+		}
+	}
+
 }
