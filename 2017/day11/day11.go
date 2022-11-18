@@ -32,7 +32,7 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		dirs := strings.Split(line, ",")
-		var ps []Position
+		ps := make([]Position, 0, len(dirs)+1)
 		p := Position{}
 		ps = append(ps, p)
 		maxD := 0
