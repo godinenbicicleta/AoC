@@ -74,58 +74,22 @@ func merge(states []map[Pos]byte) map[Pos]byte {
 	size := int(math.Sqrt(float64(len(states))))
 	res := map[Pos]byte{}
 	stateSize := int(math.Sqrt(float64(len(states[0]))))
-	//	fmt.Println("MERGING SIZE", len(states), stateSize)
-	//	for _, state := range states {
-	//		fmt.Println(show(state))
-	//	}
 	for row := 0; row < size; row++ {
 		for col := 0; col < size; col++ {
 			s := states[row*size+col]
 			for j := 0; j < stateSize; j++ {
 				for i := 0; i < stateSize; i++ {
-					//					fmt.Println("Setting", []int{i*stateSize + col, j*stateSize + row}, "to", "s[", row*size+col, "]", []int{i, j})
 					res[Pos{i + col*stateSize, j + row*stateSize}] = s[Pos{i, j}]
 				}
 			}
 		}
 	}
-	//	if stateSize%2 == 0 {
-	//		for row := 0; row < size; row++ {
-	//			for col := 0; col < size; col++ {
-	//				s := states[row*size+col]
-	//				res[Pos{0 + 2*col, 0 + 2*row}] = s[Pos{0, 0}]
-	//				res[Pos{1 + 2*col, 0 + 2*row}] = s[Pos{1, 0}]
-	//				res[Pos{0 + 2*col, 1 + 2*row}] = s[Pos{0, 1}]
-	//				res[Pos{1 + 2*col, 1 + 2*row}] = s[Pos{1, 1}]
-	//			}
-	//		}
-	//		return res
-	//	}
-	//	for row := 0; row < size; row++ {
-	//		for col := 0; col < size; col++ {
-	//			s := states[row*size+col]
-	//			res[Pos{0 + 3*col, 0 + 3*row}] = s[Pos{0, 0}]
-	//			res[Pos{1 + 3*col, 0 + 3*row}] = s[Pos{1, 0}]
-	//			res[Pos{2 + 3*col, 0 + 3*row}] = s[Pos{2, 0}]
-	//
-	//			res[Pos{0 + 3*col, 1 + 3*row}] = s[Pos{0, 1}]
-	//			res[Pos{1 + 3*col, 1 + 3*row}] = s[Pos{1, 1}]
-	//			res[Pos{2 + 3*col, 1 + 3*row}] = s[Pos{2, 1}]
-	//
-	//			res[Pos{0 + 3*col, 2 + 3*row}] = s[Pos{0, 2}]
-	//			res[Pos{1 + 3*col, 2 + 3*row}] = s[Pos{1, 2}]
-	//			res[Pos{2 + 3*col, 2 + 3*row}] = s[Pos{2, 2}]
-	//
-	//		}
-	//	}
 	return res
 }
 
 func toPattern(s map[Pos]byte) string {
 	size := int(math.Sqrt(float64(len(s))))
 	res := []string{}
-	//fmt.Println("SIZE", size)
-	//fmt.Println(s)
 	for y := 0; y < size; y++ {
 		buff := make([]byte, 0, size)
 		for x := 0; x < size; x++ {
@@ -141,10 +105,8 @@ func fromPattern(s string) map[Pos]byte {
 	s = strings.ReplaceAll(s, "/", "")
 	res := map[Pos]byte{}
 	cols := 4
-	//fmt.Println("SSSS", s)
 	if len(s) == 9 {
 		cols = 3
-		//	fmt.Println("COLS", 4)
 	}
 	for i, v := range s {
 		res[Pos{i % cols, i / cols}] = byte(v)
@@ -172,37 +134,22 @@ func combs(arr []transform) [][]transform {
 }
 
 func update(s map[Pos]byte, rules map[string]string) map[Pos]byte {
-	//fmt.Println("UPDATE")
-	//fmt.Println(show(s))
-	//fmt.Println("PARTS")
 	parts := partition(s)
-	//fmt.Println("RULES")
 	res := []map[Pos]byte{}
 Loop:
 	for _, p := range parts {
 		for _, fs := range transforms {
 			c := p
-			//		fmt.Println("TO TRANSFORM")
-			//		fmt.Println(c)
 			for _, f := range fs {
 				c = f(c)
 			}
-			//		fmt.Println("TRANSFORMED")
-			//		fmt.Println(c)
-			//		fmt.Println("BEFORE PATTERN")
-			//		fmt.Println(show(c))
 			pattern := toPattern(c)
-			//		fmt.Println("TRY PATTERN", pattern)
 			if v, ok := rules[pattern]; ok {
-				//			fmt.Println("RULE MATCHED", v)
 				v := fromPattern(v)
-				//			fmt.Println(show(v))
-				//			fmt.Println("APPEND")
 				res = append(res, v)
 				continue Loop
 			}
 		}
-		//	fmt.Println(show(p))
 		log.Fatal("No rule found")
 	}
 	merged := merge(res)
@@ -275,7 +222,7 @@ func rotate(s map[Pos]byte) map[Pos]byte {
 var transforms [][]transform
 
 func main() {
-	transforms = combs([]transform{rotate, rotate, rotate, flipv, fliph, flipv, fliph})
+	transforms = combs([]transform{rotate, rotate, flipv, fliph})
 	rounds := 18
 	state := map[Pos]byte{
 		{0, 0}: '.',
