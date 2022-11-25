@@ -173,11 +173,11 @@ func main() {
 	g1 := cp(g)
 	g2 := cp(g)
 	fmt.Println(g)
-	// part1
 
 	for i := 0; i < 10000; i++ {
 		v1 = burst1(g1, v1)
 	}
+
 	fmt.Println(v1.infections)
 	for i := 0; i < 10000000; i++ {
 		v2 = burst2(g2, v2)
