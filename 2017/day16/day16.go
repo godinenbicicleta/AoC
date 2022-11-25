@@ -101,7 +101,6 @@ func parse(ws []string) func(arr []byte, num int) string {
 	return func(arr []byte, num int) string {
 		seen := map[string][]int{}
 		for i := 0; i < num%48; i++ {
-
 			for _, f := range res {
 				f(arr)
 			}
