@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -17,9 +15,18 @@ func parse(x string, regs map[string]int) int {
 	return num
 }
 
-func play(ins []string) {
+func isPrime(n int) bool {
+	for i := 2; i <= n/2; i++ {
+
+		if n%i == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func play(ins []string, regs map[string]int) {
 	muls := 0
-	regs := map[string]int{}
 	i := 0
 	for i >= 0 && i < len(ins) {
 		in := ins[i]
@@ -61,6 +68,14 @@ func play(ins []string) {
 			y := parse(s, regs)
 			regs[x] *= y
 			muls++
+		case strings.HasPrefix(in, "--"):
+			regs["g"] = 0
+			regs["d"] = regs["b"]
+			if isPrime(regs["b"]) {
+				regs["f"] = 1
+			} else {
+				regs["f"] = 0
+			}
 		case strings.HasPrefix(in, "jnz"):
 			var s1 string
 			var s2 string
@@ -78,13 +93,70 @@ func play(ins []string) {
 		i++
 	}
 	fmt.Println(muls)
+
+	fmt.Println(regs)
 }
 
 func main() {
 	var instructions []string
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		instructions = append(instructions, scanner.Text())
-	}
-	play(instructions)
+	fmt.Println("LOOP 1")
+	instructions = strings.Split(strings.TrimSpace(`
+set b 79
+set c b
+jnz a 2
+jnz 1 5
+mul b 100
+sub b -100000
+set c b
+sub c -17000
+set f 1
+set d 2
+set e 2
+set g d
+mul g e
+sub g b
+jnz g 2
+set f 0
+sub e -1
+set g e
+sub g b
+jnz g -7
+sub d -1
+set g d
+sub g b
+jnz g -13
+jnz f 2
+sub h -1
+set g b
+sub g c
+jnz g 2
+jnz 1 3
+sub b -17
+jnz 1 -23
+`), "\n")
+	play(instructions, map[string]int{"a": 0})
+	fmt.Println("P2")
+
+	instructions = strings.Split(strings.TrimSpace(`
+set b 79
+set c b
+jnz a 2
+jnz 1 5
+mul b 100
+sub b -100000
+set c b
+sub c -17000
+set f 1
+set d 2
+-- set g = 0, d = b, f = 1 if prime(b) else 0
+jnz f 2
+sub h -1
+set g b
+sub g c
+jnz g 2
+jnz 1 3
+sub b -17
+jnz 1 -10
+`), "\n")
+	play(instructions, map[string]int{"a": 1})
 }
