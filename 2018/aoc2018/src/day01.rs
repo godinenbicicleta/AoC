@@ -25,14 +25,7 @@ pub fn run() {
             *state += x;
             Some(*state)
         })
-        .find(|&x| {
-            if seen.contains(&x) {
-                true
-            } else {
-                seen.insert(x);
-                false
-            }
-        })
+        .find(|&x| !seen.insert(x))
         .unwrap();
     println!("PART 2: {}", res2);
 }
