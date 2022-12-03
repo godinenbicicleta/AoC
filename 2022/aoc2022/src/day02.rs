@@ -1,5 +1,5 @@
-use std::fs::File;
-use std::io::Read;
+use std::fs;
+
 // X for Rock, Y for Paper, and Z for Scissors
 // (1 for Rock, 2 for Paper, and 3 for Scissors)
 // plus the score for the outcome of the round
@@ -38,15 +38,15 @@ fn score2(x: &[char]) -> i32 {
 
 pub fn run() {
     println!("day02");
-    let mut s = String::new();
-    File::open("data/day02.txt")
+
+    let rounds: Vec<char> = fs::read_to_string("data/day02.txt")
         .unwrap()
-        .read_to_string(&mut s)
-        .unwrap();
-    let rounds: Vec<char> = s.chars().filter(|x| char::is_alphabetic(*x)).collect();
-    let (p1, p2): (i32, i32) = rounds
+        .chars()
+        .filter(|x| char::is_alphabetic(*x))
+        .collect();
+    let res: (i32, i32) = rounds
         .chunks(2)
         .fold((0, 0), |acc, x| (acc.0 + score(x), acc.1 + score2(x)));
-    println!("PART 1: {}", p1);
-    println!("PART 2: {}", p2);
+    println!("PART 1: {}", res.0);
+    println!("PART 2: {}", res.1);
 }
