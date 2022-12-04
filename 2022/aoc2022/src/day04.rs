@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 pub fn run() {
     println!("day04");
-    for (label, file_name) in [("test", "data/day04_test.txt"), ("", "data/day04.txt")] {
+    for (label, file_name) in [(" (test)", "data/day04_test.txt"), ("", "data/day04.txt")] {
         let s = fs::read_to_string(file_name).unwrap();
         let mut p1 = 0;
         let mut p2 = 0;
@@ -27,7 +27,7 @@ pub fn run() {
                 p2 += 1;
             }
         }
-        println!("PART 1: {} {}", label, p1);
-        println!("PART 2: {} {}", label, p2);
+        println!("PART 1{}: {}", label, p1);
+        println!("PART 2{}: {}", label, p2);
     }
 }
