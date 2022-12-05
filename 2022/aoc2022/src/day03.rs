@@ -1,10 +1,9 @@
 use std::fs;
 
 pub fn score(c: i32) -> i32 {
-    if c >= 92 {
-        c - 96
-    } else {
-        c - 38
+    match c {
+        92.. => c - 96,
+        _ => c - 38,
     }
 }
 

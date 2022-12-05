@@ -16,7 +16,7 @@ fn score(x: &[char]) -> i32 {
         &['A', 'Z'] => 3,
         &['B', 'Z'] => 3 + 6,
         &['C', 'Z'] => 3 + 3,
-        y => panic!("no match {:?}", y),
+        _ => unreachable!(),
     }
 }
 // X means you need to lose, Y means you need to end the round in a draw,
@@ -32,7 +32,7 @@ fn score2(x: &[char]) -> i32 {
         &['A', 'Z'] => 2 + 6,
         &['B', 'Z'] => 3 + 6,
         &['C', 'Z'] => 1 + 6,
-        y => panic!("no match {:?}", y),
+        y => unreachable!("no match {:?}", y),
     }
 }
 
