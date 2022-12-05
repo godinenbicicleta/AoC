@@ -9,8 +9,7 @@ fn parse(conf: &str) -> Stacks {
     let mut index_to_stack: HashMap<usize, u32> = HashMap::new();
     let ids_line = conf.lines().last().unwrap();
     for (index, c) in ids_line.chars().enumerate() {
-        if c.is_digit(10) {
-            let stack = c.to_digit(10).unwrap();
+        if let Some(stack) = c.to_digit(10) {
             index_to_stack.insert(index, stack);
             stacks.insert(stack, Vec::new());
         }
