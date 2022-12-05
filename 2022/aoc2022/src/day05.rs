@@ -34,14 +34,14 @@ fn parse(conf: &str) -> Stacks {
 
 pub fn run() {
     println!("day05");
-    for part in [1, 2] {
-        for (label, file_name) in [(" (test)", "data/day05_test.txt"), ("", "data/day05.txt")] {
-            let s = fs::read_to_string(file_name).unwrap();
-            let (conf, ins) = s.split_once("\n\n").unwrap();
+    for (label, file_name) in [(" (test)", "data/day05_test.txt"), ("", "data/day05.txt")] {
+        let s = fs::read_to_string(file_name).unwrap();
+        let (conf, ins) = s.split_once("\n\n").unwrap();
+        for part in [1, 2] {
             let mut stacks = parse(conf);
 
             for instruction in ins.lines() {
-                match instruction.split_whitespace().collect::<Vec<&str>>()[..] {
+                match instruction.split_whitespace().collect::<Vec<_>>()[..] {
                     ["move", amount, "from", from, "to", to] => {
                         let amount = usize::from_str(amount).unwrap();
                         let from = u32::from_str(from).unwrap();
