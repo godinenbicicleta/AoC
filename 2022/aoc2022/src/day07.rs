@@ -5,79 +5,72 @@ use std::str::FromStr;
 
 #[derive(Debug)]
 struct Tree {
-    root: Rc<Node>,
-    dirs: Vec<Weak<Node>>,
+    root: Rc<Dir>,
+    dirs: Vec<Weak<Dir>>,
 }
 
 #[derive(Debug)]
-struct Node {
+struct Dir {
     name: String,
-    parent: RefCell<Weak<Node>>,
-    children: RefCell<Vec<Rc<Node>>>,
+    parent: RefCell<Weak<Dir>>,
+    children: RefCell<Vec<Rc<Dir>>>,
     size: RefCell<u32>,
 }
 
 fn build(s: String) -> Tree {
-    let root = Rc::new(Node {
+    let root_dir = Rc::new(Dir {
         name: "/".to_string(),
         parent: RefCell::new(Weak::new()),
         children: RefCell::new(vec![]),
         size: RefCell::new(0),
     });
     let dirs = vec![];
-    let mut tree = Tree { root, dirs };
-    let mut current = Rc::clone(&tree.root);
-    'outer: for line in s.lines().skip(1) {
+    let mut tree = Tree {
+        root: Rc::clone(&root_dir),
+        dirs,
+    };
+    let mut current = Rc::clone(&root_dir);
+    for line in s.lines().skip(1) {
         if line.starts_with("$ ls") {
             continue;
         }
         if line.starts_with("$ cd ..") {
             let parent = current.parent.borrow().upgrade().unwrap();
-            current = parent;
+            current = Rc::clone(&parent);
             continue;
         }
         if line.starts_with("$ cd") {
             let to_name = line.strip_prefix("$ cd ").unwrap();
-            let children = current.children.borrow().to_owned();
-            for child in children.iter() {
+            let mut new_current = Rc::clone(&current);
+            for child in current.children.borrow().iter() {
                 if child.name == to_name {
-                    current = Rc::clone(&Rc::clone(child));
-                    continue 'outer;
+                    new_current = Rc::clone(child);
+                    break;
                 }
             }
+            current = new_current;
+            continue;
         }
         if line.starts_with("dir ") {
             let dir_name = line.strip_prefix("dir ").unwrap();
-            let node = Rc::new(Node {
+            let dir = Rc::new(Dir {
                 name: dir_name.to_string(),
                 parent: RefCell::new(Weak::new()),
                 children: RefCell::new(vec![]),
                 size: RefCell::new(0),
             });
-            *node.parent.borrow_mut() = Rc::downgrade(&current);
-            current.children.borrow_mut().push(Rc::clone(&node));
-            tree.dirs.push(Rc::downgrade(&node));
+            *dir.parent.borrow_mut() = Rc::downgrade(&current);
+            tree.dirs.push(Rc::downgrade(&dir));
+            current.children.borrow_mut().push(Rc::clone(&dir));
             continue;
         }
         // we have a file
-        let (size, name) = line.split_once(" ").unwrap();
+        let (size, _) = line.split_once(" ").unwrap();
         let size_num = u32::from_str(size).expect(size);
-        let node = Rc::new(Node {
-            name: name.to_string(),
-            parent: RefCell::new(Weak::new()),
-            children: RefCell::new(vec![]),
-            size: RefCell::new(size_num),
-        });
-        *node.parent.borrow_mut() = Rc::downgrade(&current);
-        let mut n = node;
-        loop {
-            if let Some(p) = n.parent.borrow().upgrade() {
-                *p.size.borrow_mut() += size_num;
-            } else {
-                break;
-            }
-            let k = n.parent.borrow().upgrade().unwrap();
-            n = Rc::clone(&k);
+        let mut parent = Some(Rc::clone(&current));
+        while let Some(p) = parent {
+            *p.size.borrow_mut() += size_num;
+            parent = p.parent.borrow().upgrade();
         }
     }
     tree
@@ -94,7 +87,7 @@ pub fn run() {
         .filter(|x| *x <= 100_000)
         .sum();
     println!("PART 1: {}", p1);
-    let total_size = Rc::clone(&tree.root).size.borrow().to_owned();
+    let total_size = tree.root.size.borrow().to_owned();
     let needed = 30000000 - (70000000 - total_size);
     let p2 = tree
         .dirs
