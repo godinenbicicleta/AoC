@@ -12,97 +12,38 @@ fn print_grid(knots: &[Pos]) {
     for y in (-20..20).rev() {
         for x in -20..20 {
             if let Some(num) = knots.iter().enumerate().find(|(_, p)| **p == Pos { x, y }) {
-                if num.0 == 0 {
-                    print!("H");
-                } else if num.0 == knots.len() - 1 {
-                    print!("T");
-                } else {
-                    print!("{}", num.0);
+                match num.0 {
+                    0 => print!("H"),
+                    n if n == knots.len() - 1 => print!("T"),
+                    _ => print!("{}", num.0),
                 }
-            } else if x == 0 && y == 0 {
-                print!("S");
-            } else {
-                print!(".");
+                continue;
             }
+            if x == 0 && y == 0 {
+                print!("S");
+                continue;
+            }
+            print!(".");
         }
         println!();
     }
 }
 
 fn move_knot(t: Pos, h: Pos) -> Pos {
-    match (h.x-t.x, h.y-t.y) => {
-        (0,0) => t,
-        (0,2) =>  Pos { x: t.x, y: t.y + 1 },
-        (0,-2) =>  Pos { x: t.x, y: t.y - 1 },
-        (2,0) =>Pos { y: t.y, x: t.x + 1 },
-        (-2,0) =>  Pos { y: t.y, x: t.x - 1 },
-
-    }
-    match (h, t) {
-        (a, b) if a == b => a,
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx == tx && hy - ty == 2 => {
-            Pos { x: tx, y: ty + 1 }
-        }
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx == tx && ty - hy == 2 => {
-            Pos { x: tx, y: ty - 1 }
-        }
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hy == ty && hx - tx == 2 => {
-            Pos { y: ty, x: t.x + 1 }
-        }
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hy == ty && tx - hx == 2 => {
-            Pos { y: ty, x: t.x - 1 }
-        }
-        // diagonal 1 step
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx - tx == 1 && hy - ty == 2 => Pos {
-            x: tx + 1,
-            y: ty + 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx - tx == 1 && ty - hy == 2 => Pos {
-            x: tx + 1,
-            y: ty - 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx - tx == 2 && hy - ty == 1 => Pos {
-            x: tx + 1,
-            y: ty + 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx - tx == 2 && ty - hy == 1 => Pos {
-            x: tx + 1,
-            y: ty - 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if tx - hx == 2 && ty - hy == 1 => Pos {
-            x: tx - 1,
-            y: ty - 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if tx - hx == 2 && hy - ty == 1 => Pos {
-            x: tx - 1,
-            y: ty + 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if tx - hx == 1 && ty - hy == 2 => Pos {
-            x: tx - 1,
-            y: ty - 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if tx - hx == 1 && hy - ty == 2 => Pos {
-            x: tx - 1,
-            y: ty + 1,
-        },
-        // diagonal 2 steps
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx - tx == 2 && hy - ty == 2 => Pos {
-            x: tx + 1,
-            y: ty + 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if hx - tx == 2 && ty - hy == 2 => Pos {
-            x: tx + 1,
-            y: ty - 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if tx - hx == 2 && hy - ty == 2 => Pos {
-            x: tx - 1,
-            y: ty + 1,
-        },
-        (Pos { x: hx, y: hy }, Pos { x: tx, y: ty }) if tx - hx == 2 && ty - hy == 2 => Pos {
-            x: tx - 1,
-            y: ty - 1,
-        },
-        _ => t,
+    let (dx, dy) = match (h.x - t.x, h.y - t.y) {
+        (0, 2) => (0, 1),
+        (0, -2) => (0, -1),
+        (2, 0) => (1, 0),
+        (-2, 0) => (-1, 0),
+        (2, 2) | (1, 2) | (2, 1) => (1, 1),
+        (2, -1) | (1, -2) | (2, -2) => (1, -1),
+        (-2, 1) | (-1, 2) | (-2, 2) => (-1, 1),
+        (-1, -2) | (-2, -2) | (-2, -1) => (-1, -1),
+        _ => (0, 0),
+    };
+    Pos {
+        x: t.x + dx,
+        y: t.y + dy,
     }
 }
 
