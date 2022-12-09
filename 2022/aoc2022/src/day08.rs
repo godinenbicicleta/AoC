@@ -8,6 +8,8 @@ struct Max {
     left: i32,
 }
 
+// :execute "vert" "help"
+// :execute 'vsplit' | terminal 'cargo' 'run'
 pub fn run() {
     println!("day08");
     let mut arr: Vec<Vec<i32>> = Vec::new();
@@ -121,49 +123,29 @@ pub fn run() {
             let mut bottom = 0;
             // visible left
             for i in (0..x).rev() {
-                if arr[y][x] >= arr[y][i] {
-                    left += 1;
-                    if arr[y][x] == arr[y][i] {
-                        break;
-                    }
-                } else if arr[y][x] < arr[y][i] {
-                    left += 1;
+                left += 1;
+                if arr[y][x] <= arr[y][i] {
                     break;
                 }
             }
             // visible right
             for i in (x + 1)..cols {
-                if arr[y][x] >= arr[y][i] {
-                    right += 1;
-                    if arr[y][x] == arr[y][i] {
-                        break;
-                    }
-                } else if arr[y][x] < arr[y][i] {
-                    right += 1;
+                right += 1;
+                if arr[y][x] <= arr[y][i] {
                     break;
                 }
             }
             // visible top
             for j in (0..y).rev() {
-                if arr[y][x] >= arr[j][x] {
-                    top += 1;
-                    if arr[y][x] == arr[j][x] {
-                        break;
-                    }
-                } else if arr[y][x] < arr[j][x] {
-                    top += 1;
+                top += 1;
+                if arr[y][x] <= arr[j][x] {
                     break;
                 }
             }
             // visible bottom
             for j in (y + 1)..rows {
-                if arr[y][x] >= arr[j][x] {
-                    bottom += 1;
-                    if arr[y][x] == arr[j][x] {
-                        break;
-                    }
-                } else if arr[y][x] < arr[j][x] {
-                    bottom += 1;
+                bottom += 1;
+                if arr[y][x] <= arr[j][x] {
                     break;
                 }
             }
