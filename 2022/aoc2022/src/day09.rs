@@ -30,21 +30,14 @@ fn print_grid(knots: &[Pos]) {
 }
 
 fn move_knot(t: Pos, h: Pos) -> Pos {
-    let (dx, dy) = match (h.x - t.x, h.y - t.y) {
-        (0, 2) => (0, 1),
-        (0, -2) => (0, -1),
-        (2, 0) => (1, 0),
-        (-2, 0) => (-1, 0),
-        (2, 2) | (1, 2) | (2, 1) => (1, 1),
-        (2, -1) | (1, -2) | (2, -2) => (1, -1),
-        (-2, 1) | (-1, 2) | (-2, 2) => (-1, 1),
-        (-1, -2) | (-2, -2) | (-2, -1) => (-1, -1),
-        _ => (0, 0),
-    };
-    Pos {
-        x: t.x + dx,
-        y: t.y + dy,
+    let difx = h.x - t.x;
+    let dify = h.y - t.y;
+    if difx.abs() <= 1 && dify.abs() <= 1 {
+        return t;
     }
+    let x = t.x + difx.signum();
+    let y = t.y + dify.signum();
+    return Pos { x, y };
 }
 
 pub fn run() {
