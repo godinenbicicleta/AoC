@@ -51,10 +51,7 @@ pub fn run() {
     println!("day09");
     let s = fs::read_to_string("data/day09.txt").unwrap();
     for (label, num_knots) in [("PART 1", 2), ("PART 2", 10)] {
-        let mut knots = Vec::new();
-        for _ in 0..num_knots {
-            knots.push(Pos { x: 0, y: 0 });
-        }
+        let mut knots = vec![Pos { x: 0, y: 0 }; num_knots];
         let mut seen = HashSet::new();
         seen.insert(*knots.last().unwrap());
         for line in s.lines() {
