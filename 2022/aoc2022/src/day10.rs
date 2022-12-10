@@ -20,22 +20,16 @@ pub fn run() {
     let mut crt = 0;
     cycles.push(x);
     for line in s.lines() {
-        let mut parts = line.split_whitespace();
-        let instruction = parts.next().unwrap();
-        match instruction {
-            "noop" => {
-                print_crt(&mut crt, x);
+        let mut parts = line.split_whitespace().skip(1);
+        if let Some(num) = parts.next().and_then(|x| i32::from_str(x).ok()) {
+            for _ in 0..2 {
                 cycles.push(x);
+                print_crt(&mut crt, x);
             }
-            "addx" => {
-                let num = i32::from_str(parts.next().unwrap()).unwrap();
-                for _ in 0..2 {
-                    cycles.push(x);
-                    print_crt(&mut crt, x);
-                }
-                x += num;
-            }
-            _ => unreachable!(),
+            x += num;
+        } else {
+            print_crt(&mut crt, x);
+            cycles.push(x);
         }
     }
     println!();
