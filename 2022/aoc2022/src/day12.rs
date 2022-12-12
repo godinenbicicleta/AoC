@@ -39,6 +39,9 @@ pub fn run() {
         seen[start.1 as usize][start.0 as usize] = true;
         while !queue.is_empty() {
             let (current, steps) = queue.pop_front().unwrap();
+            if steps > min_steps && min_steps > 0 {
+                break;
+            }
             if current == goal {
                 if start == start1 {
                     println!("Part 1: {}", steps);
