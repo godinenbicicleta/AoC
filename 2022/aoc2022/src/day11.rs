@@ -6,6 +6,7 @@ struct Monkey {
     items: Vec<u128>,
     operation: Box<dyn Fn(u128) -> u128>,
     send_to: Box<dyn Fn(u128) -> usize>,
+    test_num: u128,
 }
 
 fn parse(s: &str) -> Monkey {
@@ -73,6 +74,7 @@ fn parse(s: &str) -> Monkey {
         inspected: 0,
         items,
         operation: op,
+        test_num,
         send_to: Box::new(move |x| if x % test_num == 0 { if_true } else { if_false }),
     }
 }
@@ -121,18 +123,13 @@ pub fn run() {
                 let mut moves = Vec::new();
                 for item in &monkeys[ix].items {
                     inspected += 1;
-                    let mut wl = (monkeys[ix].operation)(*item) / div;
+                    let wl = (monkeys[ix].operation)(*item) / div;
                     let dest = (monkeys[ix].send_to)(wl);
-                    for n in &primes {
-                        if *n > wl {
-                            break;
-                        }
-                        if wl % *n == 0 {
-                            wl = wl / *n;
-                        }
+                    if wl % monkeys[ix].test_num == 0 {
+                        moves.push((dest, wl % monkeys[ix].test_num));
+                    } else {
+                        moves.push((dest, wl));
                     }
-
-                    moves.push((dest, wl));
                 }
                 monkeys[ix].inspected += inspected;
                 monkeys[ix].items = Vec::new();
@@ -140,10 +137,12 @@ pub fn run() {
                     monkeys[dest].items.push(wl)
                 }
             }
-            println!(
-                "round: {} | {:?} {}",
-                round, monkeys[0].items, monkeys[0].inspected
-            );
+            if round % 1000 == 0 || round == 20 {
+                println!(
+                    "round: {} | {:?} {:?}",
+                    round, monkeys[0].inspected, monkeys[0].items
+                );
+            }
         }
         let mut inspects = monkeys.iter().map(|m| (m.inspected)).collect::<Vec<_>>();
         inspects.sort_by(|a, b| b.cmp(&a));
