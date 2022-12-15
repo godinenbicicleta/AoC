@@ -1,12 +1,27 @@
+use std::collections::HashMap;
 use std::fs;
 use std::str::FromStr;
 
 struct Monkey {
     inspected: u128,
-    items: Vec<u128>,
-    operation: Box<dyn Fn(u128) -> u128>,
-    send_to: Box<dyn Fn(u128) -> usize>,
+    items: Vec<Box<Num>>,
+    operation: Operation,
     test_num: u128,
+    if_true: usize,
+    if_false: usize,
+}
+
+enum Operation {
+    Square,
+    Sum(u128),
+    Mult(u128),
+}
+
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+enum Num {
+    N(u128),
+    Add(Box<Num>, Box<Num>),
+    Prod(Box<Num>, Box<Num>),
 }
 
 fn parse(s: &str) -> Monkey {
@@ -18,9 +33,9 @@ fn parse(s: &str) -> Monkey {
         .unwrap()
         .1
         .split(", ")
-        .map(|x| u128::from_str(x).unwrap())
+        .map(|x| Box::new(Num::N(u128::from_str(x).unwrap())))
         .collect();
-    let op: Box<dyn Fn(u128) -> u128> = match lines
+    let op: Operation = match lines
         .next()
         .unwrap()
         .strip_prefix("  Operation: new = old ")
@@ -30,24 +45,20 @@ fn parse(s: &str) -> Monkey {
     {
         ("*", n) => {
             let num = u128::from_str(n).ok();
-            Box::new(move |old: u128| {
-                if let Some(n) = num {
-                    old * n
-                } else {
-                    old * old
-                }
-            })
+            if let Some(n) = num {
+                Operation::Mult(n)
+            } else {
+                Operation::Square
+            }
         }
 
         ("+", n) => {
             let num = u128::from_str(n).ok();
-            Box::new(move |old: u128| {
-                if let Some(n) = num {
-                    old + n
-                } else {
-                    old + old
-                }
-            })
+            if let Some(n) = num {
+                Operation::Sum(n)
+            } else {
+                unreachable!()
+            }
         }
         _ => unreachable!(),
     };
@@ -75,7 +86,8 @@ fn parse(s: &str) -> Monkey {
         items,
         operation: op,
         test_num,
-        send_to: Box::new(move |x| if x % test_num == 0 { if_true } else { if_false }),
+        if_true,
+        if_false,
     }
 }
 
@@ -101,11 +113,74 @@ fn get_primes() -> Vec<u128> {
     p
 }
 
+fn reduce(n: Box<Num>) -> u128 {
+    match *n {
+        Num::N(n) => n,
+        Num::Add(x, y) => reduce(x) + reduce(y),
+        Num::Prod(x, y) => reduce(x) * reduce(y),
+    }
+}
+
+fn to_string(n: &Box<Num>) -> String {
+    let mut s = String::new();
+    match n.as_ref() {
+        Num::N(x) => s.push_str(&format!("{}", x)),
+        Num::Add(x, y) => {
+            let x = to_string(x);
+            let y = to_string(y);
+            s.push_str(&format!("({}+{})", x, y))
+        }
+        Num::Prod(x, y) => {
+            let x = to_string(x);
+            let y = to_string(y);
+            s.push_str(&format!("({}*{})", x, y))
+        }
+    };
+    s
+}
+
+fn divide(n: Box<Num>, div: u128) -> Num {
+    let n = reduce(n);
+    Num::N(n / div)
+}
+
+fn rem(wl: Box<Num>, t: u128, cache: &mut HashMap<(String, u128), u128>) -> u128 {
+    //let s = to_string(&wl);
+    //let res = cache.get(&(s.to_string(), t));
+    //if res.is_some() {
+    //    return *res.unwrap();
+    //}
+    let res = match *wl {
+        Num::N(n) => n % t,
+        Num::Add(x, y) => (rem(x, t, cache) + rem(y, t, cache)) % t,
+        Num::Prod(x, y) => {
+            let p1 = rem(x, t, cache);
+            if p1 == 0 {
+                0
+            } else {
+                let p2 = rem(y, t, cache);
+                if p2 == 0 {
+                    0
+                } else {
+                    (p1 * p2) % t
+                }
+            }
+        }
+    };
+    //cache.insert((s, t), res);
+    res
+}
+
+fn run_test(wl: Box<Num>, t: u128, cache: &mut HashMap<(String, u128), u128>) -> bool {
+    rem(wl, t, cache) == 0
+}
+
 pub fn run() {
     println!("day11");
     let s = fs::read_to_string("data/day11_test.txt").unwrap();
     let primes = get_primes();
     println!("{:?}", primes[..10].to_owned());
+    let mut cache = HashMap::new();
 
     for (part, div, rounds) in [(1, 3, 20), (2, 1, 10000)] {
         let mut monkeys = Vec::new();
@@ -123,12 +198,21 @@ pub fn run() {
                 let mut moves = Vec::new();
                 for item in &monkeys[ix].items {
                     inspected += 1;
-                    let wl = (monkeys[ix].operation)(*item) / div;
-                    let dest = (monkeys[ix].send_to)(wl);
-                    if wl % monkeys[ix].test_num == 0 {
-                        moves.push((dest, wl % monkeys[ix].test_num));
+                    let mut wl = match monkeys[ix].operation {
+                        Operation::Sum(n) => Box::new(Num::Add(item.clone(), Box::new(Num::N(n)))),
+                        Operation::Square => Box::new(Num::Prod(item.clone(), item.clone())),
+                        Operation::Mult(n) => {
+                            Box::new(Num::Prod(item.clone(), Box::new(Num::N(n))))
+                        }
+                    };
+                    if div != 1 {
+                        wl = Box::new(divide(wl, div));
+                    }
+                    let test_num = monkeys[ix].test_num;
+                    if run_test(wl.clone(), test_num, &mut cache) {
+                        moves.push((monkeys[ix].if_true, wl))
                     } else {
-                        moves.push((dest, wl));
+                        moves.push((monkeys[ix].if_false, wl))
                     }
                 }
                 monkeys[ix].inspected += inspected;
@@ -137,10 +221,10 @@ pub fn run() {
                     monkeys[dest].items.push(wl)
                 }
             }
-            if round % 1000 == 0 || round == 20 {
+            if round % 200 == 0 || round == 19 {
                 println!(
-                    "round: {} | {:?} {:?}",
-                    round, monkeys[0].inspected, monkeys[0].items
+                    "round: {} | {} {:?}",
+                    round, monkeys[0].inspected, monkeys[3].inspected,
                 );
             }
         }
