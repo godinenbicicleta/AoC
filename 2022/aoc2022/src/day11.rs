@@ -4,11 +4,16 @@ use std::str::FromStr;
 
 struct Monkey {
     inspected: u128,
-    items: Vec<Box<Num>>,
+    items: Vec<Item>,
     operation: Operation,
     test_num: u128,
     if_true: usize,
     if_false: usize,
+}
+#[derive(Debug, Clone)]
+struct Item {
+    id: usize,
+    wl: Box<Num>,
 }
 
 enum Operation {
@@ -20,8 +25,8 @@ enum Operation {
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 enum Num {
     N(u128),
-    Add(Box<Num>, Box<Num>),
-    Prod(Box<Num>, Box<Num>),
+    Add(Vec<Num>),
+    Prod(Vec<Num>),
 }
 
 fn parse(s: &str) -> Monkey {
@@ -33,7 +38,10 @@ fn parse(s: &str) -> Monkey {
         .unwrap()
         .1
         .split(", ")
-        .map(|x| Box::new(Num::N(u128::from_str(x).unwrap())))
+        .map(|x| Item {
+            id: usize::from_str(x).unwrap(),
+            wl: Box::new(Num::N(u128::from_str(x).unwrap())),
+        })
         .collect();
     let op: Operation = match lines
         .next()
@@ -199,10 +207,12 @@ pub fn run() {
                 for item in &monkeys[ix].items {
                     inspected += 1;
                     let mut wl = match monkeys[ix].operation {
-                        Operation::Sum(n) => Box::new(Num::Add(item.clone(), Box::new(Num::N(n)))),
-                        Operation::Square => Box::new(Num::Prod(item.clone(), item.clone())),
+                        Operation::Sum(n) => {
+                            Box::new(Num::Add(item.wl.clone(), Box::new(Num::N(n))))
+                        }
+                        Operation::Square => Box::new(Num::Prod(item.wl.clone(), item.wl.clone())),
                         Operation::Mult(n) => {
-                            Box::new(Num::Prod(item.clone(), Box::new(Num::N(n))))
+                            Box::new(Num::Prod(item.wl.clone(), Box::new(Num::N(n))))
                         }
                     };
                     if div != 1 {
@@ -210,9 +220,9 @@ pub fn run() {
                     }
                     let test_num = monkeys[ix].test_num;
                     if run_test(wl.clone(), test_num, &mut cache) {
-                        moves.push((monkeys[ix].if_true, wl))
+                        moves.push((monkeys[ix].if_true, Item { id: item.id, wl }))
                     } else {
-                        moves.push((monkeys[ix].if_false, wl))
+                        moves.push((monkeys[ix].if_false, Item { id: item.id, wl }))
                     }
                 }
                 monkeys[ix].inspected += inspected;
