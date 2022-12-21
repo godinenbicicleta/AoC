@@ -11,10 +11,8 @@ pub fn run() {
             .enumerate()
             .collect::<Vec<(usize, i128)>>();
         let reference: Vec<(usize, i128)> = nums.clone();
-        //        println!("{:?}", nums);
         for _ in 0..times {
             for (ix, target) in reference.iter() {
-                //println!("moving {}", target);
                 if *target == 0 {
                     continue;
                 }
