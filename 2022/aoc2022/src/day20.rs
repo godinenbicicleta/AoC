@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 pub fn run() {
     println!("day20");
+
     for (key, times) in [(1, 1), (811589153, 10)] {
         let s = fs::read_to_string("data/day20.txt").unwrap();
         let mut nums = s

@@ -13,6 +13,8 @@ enum Op {
     Compare(String, String),
 }
 
+
+
 fn evaluate(key: &str, d: &HashMap<String, Op>) -> i128 {
     match d.get(key).unwrap() {
         Op::Num(n) => *n,
@@ -32,14 +34,17 @@ fn evaluate(key: &str, d: &HashMap<String, Op>) -> i128 {
     }
 }
 
+
+
 pub fn run() {
     println!("day21");
-    let s = fs::read_to_string("data/day21.txt").unwrap();
+    let s = fs::read_to_string("data/day21_test.txt").unwrap();
     let mut d = HashMap::new();
     let mut p2_root = Op::Num(1);
+
     for line in s.lines() {
         let (key, raw_v) = line.split_once(": ").unwrap();
-        if let Some(num) = i128::from_str(raw_v).ok() {
+        if let Ok(num) = i128::from_str(raw_v) {
             d.insert(key.to_string(), Op::Num(num));
             continue;
         }
@@ -61,7 +66,7 @@ pub fn run() {
         };
     }
     println!("{}", evaluate("root", &d));
-    d.insert("root".to_string(), p2_root.clone());
+    d.insert("root".to_string(), p2_root);
     let mut minx: i128 = 0;
     let mut maxx: i128 = 72664227897438;
     while minx <= maxx {
@@ -72,7 +77,7 @@ pub fn run() {
                 for i in mid - 10..mid + 10 {
                     d.insert("humn".to_string(), Op::Num(i));
                     if evaluate("root", &d) == 0 {
-                        println!("{}", i);
+                        println!("{i}");
                     }
                 }
                 break;
