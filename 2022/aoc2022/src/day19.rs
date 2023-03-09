@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
@@ -6,10 +6,25 @@ use std::str::FromStr;
 #[derive(Debug)]
 struct Blueprint {
     id: u32,
-    ore: HashMap<Resource, u32>,
-    clay: HashMap<Resource, u32>,
-    obsidian: HashMap<Resource, u32>,
-    geode: HashMap<Resource, u32>,
+    ore: Resources,
+    clay: Resources,
+    obsidian: Resources,
+    geode: Resources,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+struct Resources {
+    ore: u32,
+    clay: u32,
+    obsidian: u32,
+    geode: u32,
+}
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+struct Robots {
+    ore: u32,
+    clay: u32,
+    obsidian: u32,
+    geode: u32,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -20,12 +35,10 @@ enum Resource {
     Geode,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-struct Robots {
-    ore: u32,
-    clay: u32,
-    obsidian: u32,
-    geode: u32,
+struct Round {
+    i: u8,
+    resources: Resources,
+    robots: Robots,
 }
 
 fn parse_one(s: &str) -> Resource {
@@ -42,12 +55,11 @@ fn parse_one(s: &str) -> Resource {
     }
 }
 
-fn parse_robot(s: &str) -> HashMap<Resource, u32> {
+fn parse_robot(s: &str) -> Resources {
     let mut m = HashMap::new();
     if s.contains("and") {
         let parts = s.split_once("costs ").unwrap().1.split(" and ");
         for s in parts {
-            println!("{s}");
             let mut parts = s.split_whitespace();
             let num = u32::from_str(parts.next().unwrap()).unwrap();
             m.insert(parse_one(parts.next().unwrap()), num);
@@ -58,218 +70,150 @@ fn parse_robot(s: &str) -> HashMap<Resource, u32> {
         m.insert(parse_one(parts.next().unwrap()), num);
     };
 
-    m
+    Resources {
+        ore: *m.get(&Resource::Ore).unwrap_or(&0),
+        clay: *m.get(&Resource::Clay).unwrap_or(&0),
+        obsidian: *m.get(&Resource::Obsidian).unwrap_or(&0),
+        geode: *m.get(&Resource::Geode).unwrap_or(&0),
+    }
 }
 
-fn get_options(
-    resources: Robots,
-    b: &Blueprint,
-    cache: &mut HashMap<(Robots, u32), Vec<Vec<Resource>>>,
-) -> Vec<Vec<Resource>> {
-    if cache.contains_key(&(resources, b.id)) {
-        return (*cache.get(&(resources, b.id)).unwrap()).clone();
-    }
-    let mut res = Vec::new();
-    let mut ore = true;
-    let mut ore_resources = resources.to_owned();
-    for (key, value) in b.ore.iter() {
-        match key {
-            Resource::Ore => {
-                if resources.ore < *value {
-                    ore = false;
-                    break;
-                }
-                ore_resources.ore -= value;
-            }
-            Resource::Clay => {
-                if resources.clay < *value {
-                    ore = false;
-                    break;
-                }
-                ore_resources.clay -= value;
-            }
-            Resource::Obsidian => {
-                if resources.obsidian < *value {
-                    ore = false;
-                    break;
-                }
-                ore_resources.obsidian -= value;
-            }
-            Resource::Geode => {
-                if resources.geode < *value {
-                    ore = false;
-                    break;
-                }
-                ore_resources.geode -= value;
-            }
-        }
-    }
-    if ore {
-        res.push(vec![Resource::Ore]);
-        for mut elem in get_options(ore_resources, b, cache) {
-            elem.push(Resource::Ore);
-            res.push(elem);
-        }
-    }
-
-    let mut clay = true;
-    let mut clay_resources = resources.to_owned();
-    for (key, value) in b.ore.iter() {
-        match key {
-            Resource::Ore => {
-                if resources.ore < *value {
-                    clay = false;
-                    break;
-                }
-                clay_resources.ore -= value;
-            }
-            Resource::Clay => {
-                if resources.clay < *value {
-                    clay = false;
-                    break;
-                }
-                clay_resources.clay -= value;
-            }
-            Resource::Obsidian => {
-                if resources.obsidian < *value {
-                    clay = false;
-                    break;
-                }
-                clay_resources.obsidian -= value;
-            }
-            Resource::Geode => {
-                if resources.geode < *value {
-                    clay = false;
-                    break;
-                }
-                clay_resources.geode -= value;
-            }
-        }
-    }
-    if clay {
-        res.push(vec![Resource::Clay]);
-        for mut elem in get_options(clay_resources, b, cache) {
-            elem.push(Resource::Clay);
-            res.push(elem);
-        }
-    }
-
-    let mut obsidian = true;
-    let mut obsidian_resources = resources.to_owned();
-    for (_, value) in b.obsidian.iter() {
-        if resources.obsidian > *value {
-            obsidian = false;
-            break;
-        }
-        obsidian_resources.obsidian -= value;
-    }
-    if obsidian {
-        res.push(vec![Resource::Obsidian]);
-        for mut elem in get_options(obsidian_resources, b, cache) {
-            elem.push(Resource::Obsidian);
-            res.push(elem);
-        }
-    }
-
-    let mut geode = true;
-    let mut geode_resources = resources.to_owned();
-    for (_, value) in b.geode.iter() {
-        if resources.geode > *value {
-            geode = false;
-            break;
-        }
-        geode_resources.geode -= value;
-    }
-    if geode {
-        res.push(vec![Resource::Geode]);
-        for mut elem in get_options(geode_resources, b, cache) {
-            elem.push(Resource::Geode);
-            res.push(elem);
-        }
-    }
-
-    cache.insert((resources, b.id), res.to_owned());
-    //println!("Original Resources: {resources:?}");
-    //println!("Result: {res:?}");
-
-    res
+fn can_buy(resources: Resources, cost: Resources) -> bool {
+    resources.ore >= cost.ore
+        && resources.obsidian >= cost.obsidian
+        && resources.clay >= cost.clay
+        && resources.geode >= cost.geode
 }
 
-fn find_best(b: &Blueprint) -> u32 {
-    let mut seen: HashMap<Robots, u32> = HashMap::new();
-    let robs = Robots {
-        ore: 1,
-        clay: 0,
-        obsidian: 0,
-        geode: 0,
-    };
-    let mut states: VecDeque<(u32, Robots, HashMap<Resource, u32>)> = VecDeque::new();
-    states.push_front((0, robs, HashMap::new()));
+fn minus_cost(resources: Resources, cost: Resources) -> Resources {
+    Resources {
+        ore: resources.ore - cost.ore,
+        clay: resources.clay - cost.clay,
+        obsidian: resources.obsidian - cost.obsidian,
+        geode: resources.geode - cost.geode,
+    }
+}
+fn add_robot(robots: Robots, robot: Resource) -> Robots {
+    match robot {
+        Resource::Clay => Robots {
+            clay: robots.clay + 1,
+            ..robots
+        },
+        Resource::Ore => Robots {
+            ore: robots.ore + 1,
+            ..robots
+        },
+        Resource::Geode => Robots {
+            geode: robots.geode + 1,
+            ..robots
+        },
+        Resource::Obsidian => Robots {
+            obsidian: robots.obsidian + 1,
+            ..robots
+        },
+    }
+}
+fn add_resources(left: Resources, right: Robots) -> Resources {
+    Resources {
+        ore: left.ore + right.ore,
+        clay: left.clay + right.clay,
+        obsidian: left.obsidian + right.obsidian,
+        geode: left.geode + right.geode,
+    }
+}
+
+fn get_geodes(b: &Blueprint, rounds: u8) -> u32 {
+    let mut seen: HashMap<u8, (u32, u32)> = HashMap::new();
+    let mut states = vec![Round {
+        i: 0,
+        resources: Resources {
+            ore: 0,
+            clay: 0,
+            obsidian: 0,
+            geode: 0,
+        },
+        robots: Robots {
+            ore: 1,
+            clay: 0,
+            obsidian: 0,
+            geode: 0,
+        },
+    }];
     let mut max_score: u32 = 0;
-    seen.insert(robs, 0);
     while !states.is_empty() {
-        let (time, robots, resources) = states.pop_front().unwrap();
-        if time >= 19 {
-            let score: u32 = *resources.get(&Resource::Geode).unwrap_or(&0);
-            if score > max_score {
-                println!("robots: {robots:?}");
-                println!("resources: {resources:?}");
-                println!("score: {score}");
-                println!("time: {time}");
+        let state = states.pop().unwrap();
+        if seen.contains_key(&state.i) {
+            let (seen_geode_re, seen_geode_ro) = seen.get(&state.i).unwrap();
+            if *seen_geode_re > state.resources.geode && *seen_geode_ro > state.robots.geode {
+                continue;
             }
-            max_score = max_score.max(score);
+            if state.resources.geode > *seen_geode_re && state.robots.geode > *seen_geode_ro {
+                seen.insert(state.i, (state.resources.geode, state.robots.geode));
+            }
+        } else {
+            seen.insert(state.i, (state.resources.geode, state.robots.geode));
+        }
+
+        let round_no = state.i + 1;
+        if round_no > rounds {
+            max_score = max_score.max(state.resources.geode);
             continue;
         }
-        let time = time + 1;
-        let mut resources = resources.to_owned();
-        *resources.entry(Resource::Ore).or_insert(0) += robots.ore;
-        *resources.entry(Resource::Clay).or_insert(0) += robots.clay;
-        *resources.entry(Resource::Geode).or_insert(0) += robots.geode;
-        *resources.entry(Resource::Obsidian).or_insert(0) += robots.obsidian;
-        states.push_back((time, robots, resources.clone()));
-        let resources_for_key = Robots {
-            ore: *resources.get(&Resource::Ore).unwrap(),
-            obsidian: *resources.get(&Resource::Obsidian).unwrap(),
-            clay: *resources.get(&Resource::Clay).unwrap(),
-            geode: *resources.get(&Resource::Geode).unwrap(),
-        };
-        let mut cache = HashMap::new();
-        for new_robots in get_options(resources_for_key, b, &mut cache).iter() {
-            let mut robots = robots;
-            let mut new_resources = resources.to_owned();
-            for new_robot in new_robots.iter() {
-                match new_robot {
-                    Resource::Ore => {
-                        for (key, value) in b.ore.iter() {
-                            new_resources.entry(*key).and_modify(|e| *e -= value);
+
+        let resources = state.resources;
+        let robots = state.robots;
+
+        let mut new_resources = vec![resources];
+        let mut new_robots = vec![robots];
+
+        if can_buy(resources, b.geode) {
+            new_resources = vec![minus_cost(resources, b.geode)];
+            new_robots = vec![add_robot(robots, Resource::Geode)];
+        } else {
+            for (cost, resource) in [b.obsidian, b.clay, b.ore].iter().zip([
+                Resource::Obsidian,
+                Resource::Clay,
+                Resource::Ore,
+            ]) {
+                if can_buy(resources, *cost) {
+                    let cond = match resource {
+                        Resource::Obsidian => {
+                            robots.obsidian > b.geode.obsidian
+                                && robots.obsidian > b.obsidian.obsidian
+                                && robots.obsidian > b.clay.obsidian
+                                && robots.obsidian > b.ore.obsidian
                         }
-                        robots.ore += 1;
-                    }
-                    Resource::Obsidian => {
-                        for (key, value) in b.obsidian.iter() {
-                            new_resources.entry(*key).and_modify(|e| *e -= value);
+                        Resource::Clay => {
+                            robots.clay > b.geode.clay
+                                && robots.clay > b.obsidian.clay
+                                && robots.clay > b.clay.clay
+                                && robots.clay > b.ore.clay
                         }
-                        robots.obsidian += 1;
-                    }
-                    Resource::Geode => {
-                        robots.geode += 1;
-                        for (key, value) in b.geode.iter() {
-                            new_resources.entry(*key).and_modify(|e| *e -= value);
+                        Resource::Ore => {
+                            robots.ore > b.geode.ore
+                                && robots.ore > b.obsidian.ore
+                                && robots.ore > b.clay.ore
+                                && robots.ore > b.ore.ore
                         }
+                        _ => unreachable!(),
+                    };
+                    if cond {
+                        continue;
                     }
-                    Resource::Clay => {
-                        robots.clay += 1;
-                        for (key, value) in b.clay.iter() {
-                            new_resources.entry(*key).and_modify(|e| *e -= value);
-                        }
-                    }
+                    new_resources.push(minus_cost(resources, *cost));
+                    new_robots.push(add_robot(robots, resource));
                 }
             }
-            if !seen.contains_key(&robots) || *seen.get(&robots).unwrap() > time {
-                states.push_back((time, robots, new_resources));
-                seen.insert(robots, time);
-                println!("{robots:?}, {time}");
-            }
+        }
+
+        let new_resources = new_resources.iter().map(|x| add_resources(*x, robots));
+
+        for (resource, robot) in new_resources.zip(new_robots) {
+            states.push(Round {
+                i: round_no,
+                resources: resource,
+                robots: robot,
+            });
         }
     }
     max_score
@@ -277,31 +221,40 @@ fn find_best(b: &Blueprint) -> u32 {
 
 pub fn run() {
     println!("day19");
-    let f = File::open("data/day19_test.txt").unwrap();
+    let f = File::open("data/day19.txt").unwrap();
     let mut blueprints: Vec<Blueprint> = Vec::new();
     let mut id = 1;
     for line in BufReader::new(f).lines() {
         let line = line.unwrap().to_owned();
         let line = line.split_once(": ");
-        let mut robots = line.unwrap().1.split(". ");
-        let ore_robot = parse_robot(robots.next().unwrap());
-        let clay_robot = parse_robot(robots.next().unwrap());
-        let obsidian_robot = parse_robot(robots.next().unwrap());
-        let geode_robot = parse_robot(robots.next().unwrap());
+        let mut costs = line.unwrap().1.split(". ");
+        let ore = parse_robot(costs.next().unwrap());
+        let clay = parse_robot(costs.next().unwrap());
+        let obsidian = parse_robot(costs.next().unwrap());
+        let geode = parse_robot(costs.next().unwrap());
         let b = Blueprint {
             id,
-            ore: ore_robot,
-            clay: clay_robot,
-            obsidian: obsidian_robot,
-            geode: geode_robot,
+            ore,
+            clay,
+            obsidian,
+            geode,
         };
         id += 1;
         blueprints.push(b);
     }
-    println!("{blueprints:?}");
+    let mut p1 = 0;
     for blueprint in blueprints.iter() {
-        let quality = find_best(blueprint);
-        println!("{quality}");
-        break;
+        let score = get_geodes(blueprint, 24);
+        let quality = score * blueprint.id;
+        println!("{}: {score} | {quality}", blueprint.id);
+        p1 += quality;
     }
+    println!("PART 1: {p1}");
+    let mut p2 = 1;
+    for blueprint in blueprints.iter().take(3) {
+        let score = get_geodes(blueprint, 32);
+        println!("{}: {score}", blueprint.id);
+        p2 *= score;
+    }
+    println!("PART 2: {p2}");
 }
