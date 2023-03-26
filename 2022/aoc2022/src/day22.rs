@@ -23,14 +23,18 @@ fn to_str(g: &HashMap<(i32, i32), char>) -> String {
 
 fn pos_to_face(pos: (i32, i32), length: i32) -> u8 {
     // small grid
+    // // 53, 0
     match pos {
-        (x, _y) if x < length => 2,
-        (x, _y) if x >= length && x < length * 2 => 3,
-        (_x, y) if y < length => 1,
-        (x, y) if x >= 2 * length && x < 3 * length && y >= length && y < length * 2 => 4,
-        (x, y) if x >= 2 * length && y >= 2 * length && x < 3 * length => 5,
-        (x, _y) if x >= 3 * length => 6,
-        _ => unreachable!(),
+        (x, y) if x >= length && x <= 2 * length && y < length => 1, // ok
+        (x, y) if x >= 2 * length && y < length => 6,                // ok
+        (x, y) if y >= 3 * length && x < length => 2,                // ok
+        (x, y) if y >= 2 * length && y < 3 * length && x < length => 3,
+        (x, y) if y >= 2 * length && y < 3 * length && x >= length && x < 2 * length => 5,
+        (x, y) if y >= length && y < 2 * length && x >= length && x <= 2 * length => 4,
+        _ => {
+            println!("x={}, y={}", pos.0, pos.1);
+            unreachable!()
+        }
     }
 }
 
@@ -43,11 +47,13 @@ fn run2(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
     let mut dir = 'R';
     let mut i = 0;
     let mut repr = grid.clone();
-    println!("{pos:?}");
+    //println!("{pos:?}");
     repr.insert(pos, '>');
     while i < instructions.len() {
-        println!("{pos:?} {dir}");
-        println!("{}", to_str(&repr));
+        //let ix = (i + 3).min(instructions.len() - 1);
+        //let arr = from_utf8(&instructions[i..=ix]).unwrap();
+        //println!("{pos:?} {dir}, {arr}");
+        //println!("{}", to_str(&repr));
         if instructions[i] == b'R' || instructions[i] == b'L' {
             dir = match (instructions[i], dir) {
                 (b'R', 'R') => 'D',
@@ -121,11 +127,12 @@ fn run2(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
                         continue;
                     } else {
                         //else if grid.get(&new_pos).is_some() && *grid.get(&new_pos).unwrap() == '#' {
-                        // we can be in 1,4,6
+                        // go right from 6,4,5,2
                         let (new_pos, new_dir) = match pos_to_face(pos, length) {
-                            1 => ((4 * length - 1, pos.1 - 2 * length), 'L'), // 6 and to the left
-                            4 => ((4 * length - 1 - (pos.1 - length), 2 * length), 'D'),
-                            6 => ((3 * length - 1, pos.1 - 2 * length), 'L'),
+                            6 => ((2 * length - 1, 3 * length - pos.1 - 1), 'L'), // 5 LEFT | INVERTED
+                            4 => ((2 * length + (pos.1 - length), length - 1), 'U'), // 6 UP
+                            5 => ((3 * length - 1, 3 * length - pos.1 - 1), 'L'), // 6 LEFT | INVERTED
+                            2 => ((pos.1 - 3 * length + length, 3 * length - 1), 'U'), // 5 UP
                             _ => unreachable!(),
                         };
                         if grid.get(&new_pos).is_some() && *grid.get(&new_pos).unwrap() == '.' {
@@ -141,11 +148,12 @@ fn run2(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
                         pos = new_pos;
                         continue;
                     } else {
-                        // go left from 1,2,5
+                        // go left from 1,4,3,2
                         let (new_pos, new_dir) = match pos_to_face(pos, length) {
-                            1 => ((1, length - 1), 'D'),                               // 3 and Down
-                            2 => ((pos.1 - length, 3 * length - 1), 'U'),              // 6 Up
-                            5 => ((pos.1 - 2 * length + length, 2 * length - 1), 'L'), // 3 L
+                            1 => ((0, 3 * length - pos.1 - 1), 'R'), // 3 RIGHT | INVERTED
+                            4 => ((pos.1 - length, 2 * length), 'D'), // 3 DOWN
+                            3 => ((length, 3 * length - pos.1 - 1), 'R'), // 1 RIGHT | INVERTED
+                            2 => ((pos.1 - 3 * length + length, 0), 'D'), // 1 DOWN
                             _ => unreachable!(),
                         };
                         if grid.get(&new_pos).is_some() && *grid.get(&new_pos).unwrap() == '.' {
@@ -164,12 +172,11 @@ fn run2(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
                         continue;
                     } else {
                         //else if grid.get(&new_pos).is_some() && *grid.get(&new_pos).unwrap() == '#' {
+                        //go down from 2, 5, 6
                         let (new_pos, new_dir) = match pos_to_face(pos, length) {
-                            //
-                            2 => ((pos.0 + 2 * length, 3 * length - 1), 'U'), // 5 Up
-                            3 => ((2 * length - 1, pos.0 - length + 2 * length), 'R'), // 5 R
-                            5 => ((length - 1 - (pos.0 - 2 * length), 2 * length - 1), 'U'), // 2 Up
-                            6 => ((0, pos.0 - 3 * length), 'R'),              // 2 R
+                            2 => ((2 * length + pos.0, 0), 'D'),                   // 6 DOWN
+                            5 => ((length - 1, pos.0 - length + 3 * length), 'L'), // 2 LEFT
+                            6 => ((2 * length - 1, pos.0 - length), 'L'),          // 4 LEFT
                             _ => unreachable!(),
                             //
                         };
@@ -186,11 +193,11 @@ fn run2(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
                         pos = new_pos;
                         continue;
                     } else {
+                        // go up from 3, 1, 6
                         let (new_pos, new_dir) = match pos_to_face(pos, length) {
-                            1 => ((pos.0 - 2 * length, length), 'D'), // 2 Down
-                            2 => ((pos.0 + 2 * length, 0), 'D'),      // 1 Down
-                            3 => ((2 * length, pos.0 - length), 'R'), // 1 Right
-                            6 => ((3 * length - 1, pos.0 - 3 * length + length), 'L'), // 4 Left
+                            1 => ((0, pos.0 + 2 * length), 'R'),              // 2 RIGHT
+                            3 => ((length, length + pos.0), 'R'),             // 4 RIGHT
+                            6 => ((pos.0 - 2 * length, 4 * length - 1), 'U'), // 2 UP
                             _ => unreachable!(),
                         };
                         //else if grid.get(&new_pos).is_some() && *grid.get(&new_pos).unwrap() == '#' {
@@ -207,8 +214,8 @@ fn run2(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
         }
     }
 
-    println!("{pos:?} {dir}");
-    println!("{}", to_str(&repr));
+    //println!("{pos:?} {dir}");
+    //println!("{}", to_str(&repr));
     let mut p2 = (pos.1 + 1) * 1000;
     p2 += 4 * (pos.0 + 1);
     p2 += match dir {
@@ -228,7 +235,7 @@ fn run1(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
     let mut dir = 'R';
     let mut i = 0;
     let mut repr = grid.clone();
-    println!("{pos:?}");
+    //println!("{pos:?}");
     repr.insert(pos, '>');
     while i < instructions.len() {
         //println!("{pos:?} {dir}");
@@ -388,8 +395,8 @@ fn run1(grid: &HashMap<(i32, i32), char>, pos: (i32, i32), instructions: &[u8]) 
         }
     }
 
-    println!("{pos:?} {dir}");
-    println!("{}", to_str(&repr));
+    //println!("{pos:?} {dir}");
+    //println!("{}", to_str(&repr));
     let mut p1 = (pos.1 + 1) * 1000;
     p1 += 4 * (pos.0 + 1);
     p1 += match dir {

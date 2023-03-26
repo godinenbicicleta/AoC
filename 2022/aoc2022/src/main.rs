@@ -20,11 +20,12 @@ extern crate core;
 //mod day17;
 //mod day20;
 // mod day18;
-mod day19;
+//mod day19;
 //mod day21;
 //mod day22;
 //mod day23;
 // mod day24;
+mod day25;
 
 fn main() {
     //    day01::run();
@@ -45,10 +46,11 @@ fn main() {
     //   day16::run();
     //    day17::run();
     //day18::run();
-    day19::run();
+    //    day19::run();
     //day20::run();
     //day21::run();
-    //    day22::run();
+    //   day22::run();
     //    day23::run();
     //    day24::run();
+    day25::run();
 }
