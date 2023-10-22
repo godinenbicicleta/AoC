@@ -156,6 +156,7 @@ func ReadCoords(fname string) []Coord {
 	if err != nil {
 		panic(err)
 	}
+	defer f.Close()
 
 	coords := []Coord{}
 
