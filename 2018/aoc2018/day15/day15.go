@@ -437,25 +437,9 @@ loop:
 					target := targets[0]
 
 					nextStep := chooseStep(target.paths)
-					u = Unit{Point: nextStep, hp: u.hp, unitType: u.unitType, id: u.id}
-					newGoblins := make([]Unit, len(state.goblins))
-					newElfs := make([]Unit, len(state.elfs))
-					for i := 0; i < len(state.goblins); i++ {
-						if state.goblins[i].id == oldUnit.id {
-							newGoblins[i] = u
-						} else {
-							newGoblins[i] = state.goblins[i]
-						}
-					}
-					for i := 0; i < len(state.elfs); i++ {
-						if state.elfs[i].id == oldUnit.id {
-							newElfs[i] = u
-						} else {
-							newElfs[i] = state.elfs[i]
-						}
-					}
-
-					state = State{elfs: newElfs, goblins: newGoblins}
+					newU := Unit{Point: nextStep, hp: u.hp, unitType: u.unitType, id: u.id}
+					state = state.replace(u, newU)
+					u = newU
 				}
 			}
 
