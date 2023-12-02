@@ -24,20 +24,20 @@ defmodule Day01 do
   def p1() do
     File.stream!("data/day01.txt")
     |> Enum.map(&String.trim/1)
-    |> solve
-  end
-
-  def solve(lines) do
-    lines
-    |> Enum.map(&String.split(&1, "", trim: true))
+    |> Enum.map(&String.codepoints/1)
     |> Enum.map(&get_nums/1)
-    |> Enum.reduce(0, fn {a, b}, acc -> 10 * a + b + acc end)
+    |> sum
   end
 
   def p2() do
     File.stream!("data/day01.txt")
     |> Enum.map(&String.trim/1)
     |> Enum.map(fn line -> {find_first(line), find_last(line)} end)
+    |> sum
+  end
+
+  def sum(nums) do
+    nums
     |> Enum.reduce(0, fn {a, b}, acc -> 10 * a + b + acc end)
   end
 
@@ -47,7 +47,7 @@ defmodule Day01 do
     if res do
       @to_num[res]
     else
-      find_first(String.slice(line, 1, String.length(line)))
+      find_first(String.slice(line, 1..-1))
     end
   end
 
@@ -57,23 +57,18 @@ defmodule Day01 do
     if res do
       @to_num[res]
     else
-      find_last(String.slice(line, 0, String.length(line) - 1))
+      find_last(String.slice(line, 0..-2))
     end
   end
 
-  def p2test() do
-    File.stream!("data/day01_test.txt")
-    |> Enum.map(&String.trim/1)
-  end
-
-  def is_num(s) do
+  def is_num?(s) do
     Integer.parse(s) != :error
   end
 
   def get_nums(s) do
     rev = Enum.reverse(s)
-    {n1, _x} = Enum.find(s, &is_num/1) |> Integer.parse()
-    {n2, _x} = Enum.find(rev, &is_num/1) |> Integer.parse()
+    {n1, _} = Enum.find(s, &is_num?/1) |> Integer.parse()
+    {n2, _} = Enum.find(rev, &is_num?/1) |> Integer.parse()
     {n1, n2}
   end
 end
