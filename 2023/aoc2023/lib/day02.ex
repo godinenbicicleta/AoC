@@ -8,16 +8,20 @@ defmodule Day02 do
 
   def p2() do
     File.stream!("data/day02.txt")
-    |> Enum.map(&parse/1)
-    |> Enum.map(&min_set/1)
-    |> Enum.map(&Map.values/1)
-    |> Enum.map(&Enum.product/1)
+    |> Enum.map(&process/1)
     |> Enum.sum()
+  end
+
+  def process(x) do
+  parse(x)
+  |> min_set
+  |> Map.values
+  |> Enum.product
   end
 
   def min_set(arr) do
     Enum.reduce(arr, %{}, fn {_, m}, acc ->
-      Map.merge(m, acc, fn _key, v1, v2 -> Enum.max([v1, v2]) end)
+      Map.merge(m, acc, fn _key, v1, v2 -> max(v1, v2) end)
     end)
   end
 
