@@ -38,7 +38,7 @@ defmodule Day02 do
 
   def parse(line) do
     %{"game_id" => game_id} = Regex.named_captures(~r/Game (?<game_id>\d+):/, line)
-    {gid, _} = Integer.parse(game_id)
+    gid = String.to_integer(game_id)
     [_, rest] = String.split(line, ": ")
 
     subsets =
@@ -53,10 +53,7 @@ defmodule Day02 do
     |> Enum.reduce(%{}, fn r, acc ->
       Regex.named_captures(r, line)
       |> Kernel.||(%{})
-      |> Enum.into(%{}, fn {k, v} ->
-        {value, _} = Integer.parse(v)
-        {k, value}
-      end)
+      |> Enum.into(%{}, fn {k, v} -> {k, String.to_integer(v)} end)
       |> Map.merge(acc)
     end)
   end
