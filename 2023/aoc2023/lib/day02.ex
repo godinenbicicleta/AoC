@@ -13,10 +13,10 @@ defmodule Day02 do
   end
 
   def process(x) do
-  parse(x)
-  |> min_set
-  |> Map.values
-  |> Enum.product
+    parse(x)
+    |> min_set
+    |> Map.values()
+    |> Enum.product()
   end
 
   def min_set(arr) do
