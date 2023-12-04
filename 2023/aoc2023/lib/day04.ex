@@ -14,19 +14,19 @@ defmodule Day04 do
       |> Enum.map(&process/1)
       |> Enum.into(%{})
 
-    Enum.reduce(cards, {map_size(cards), cards}, &reducer/2)
+    Enum.reduce(Map.keys(cards), {map_size(cards), cards}, &reducer/2)
     |> elem(0)
   end
 
-  def reducer({k, v}, acc = {total, cards}) do
+  def reducer(k, acc = {total, cards}) do
+    v = cards[k]
+
     if v == 0 do
       acc
     else
-      new_cards =
-        Enum.filter(cards, fn {c, _} -> c - k >= 1 && c - k <= v end)
-        |> Enum.into(%{})
+      new_keys = (k + 1)..(k + v)
 
-      {t, _} = Enum.reduce(new_cards, {map_size(new_cards), cards}, &reducer/2)
+      {t, _} = Enum.reduce(new_keys, {v, cards}, &reducer/2)
       {total + t, cards}
     end
   end
