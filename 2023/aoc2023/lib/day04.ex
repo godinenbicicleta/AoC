@@ -31,6 +31,13 @@ defmodule Day04 do
     end
   end
 
+  def to_set(line) do
+    line
+    |> String.split(" ", trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.into(MapSet.new())
+  end
+
   def process(line) do
     [card, nums] =
       line
@@ -41,17 +48,9 @@ defmodule Day04 do
 
     [[_, id_str]] = Regex.scan(~r/Card\s+(\d+)/, card_str)
 
-    winners =
-      winners
-      |> String.split(" ", trim: true)
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.into(MapSet.new())
+    winners = to_set(winners)
 
-    nums =
-      nums
-      |> String.split(" ", trim: true)
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.into(MapSet.new())
+    nums = to_set(nums)
 
     winner_count =
       MapSet.intersection(winners, nums)
