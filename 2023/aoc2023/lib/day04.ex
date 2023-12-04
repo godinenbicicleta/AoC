@@ -2,6 +2,7 @@ defmodule Day04 do
   def p1 do
     File.stream!("data/day04.txt")
     |> Enum.map(&process/1)
+    |> Enum.map(&elem(&1, 1))
     |> Enum.filter(&(&1 > 0))
     |> Enum.map(fn x -> 2 ** (x - 1) end)
     |> Enum.sum()
@@ -10,7 +11,7 @@ defmodule Day04 do
   def p2 do
     cards =
       File.stream!("data/day04.txt")
-      |> Enum.map(&process2/1)
+      |> Enum.map(&process/1)
       |> Enum.into(%{})
 
     Enum.reduce(cards, {map_size(cards), cards}, &reducer/2)
@@ -30,7 +31,7 @@ defmodule Day04 do
     end
   end
 
-  def process2(line) do
+  def process(line) do
     [card, nums] =
       line
       |> String.trim()
@@ -57,29 +58,5 @@ defmodule Day04 do
       |> Enum.count()
 
     {String.to_integer(id_str), winner_count}
-  end
-
-  def process(line) do
-    [card, nums] =
-      line
-      |> String.trim()
-      |> String.split("|")
-
-    [_, winners] = card |> String.split(":")
-
-    winners =
-      winners
-      |> String.split(" ", trim: true)
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.into(MapSet.new())
-
-    nums =
-      nums
-      |> String.split(" ", trim: true)
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.into(MapSet.new())
-
-    MapSet.intersection(winners, nums)
-    |> Enum.count()
   end
 end
