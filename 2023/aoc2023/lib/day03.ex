@@ -1,22 +1,37 @@
 defmodule Day03 do
-  def p1 do
-    File.stream!("data/day03.txt")
+  def preprocess(fname) do
+    fname
+    |> File.stream!()
     |> Enum.map(&String.trim/1)
     |> Enum.with_index()
     |> Enum.map(&parse/1)
     |> List.flatten()
     |> Enum.into(%{}, fn {v, y, x} -> {{x, y}, v} end)
+  end
+
+  def p1 do
+    "data/day03.txt"
+    |> preprocess
     |> sum
   end
 
   def p2 do
-    File.stream!("data/day03.txt")
-    |> Enum.map(&String.trim/1)
-    |> Enum.with_index()
-    |> Enum.map(&parse/1)
-    |> List.flatten()
-    |> Enum.into(%{}, fn {v, y, x} -> {{x, y}, v} end)
+    "data/day03.txt"
+    |> preprocess
     |> sum_gears
+  end
+
+  def neighbors({x, y}) do
+    [
+      {x - 1, y - 1},
+      {x - 1, y + 1},
+      {x + 1, y - 1},
+      {x + 1, y + 1},
+      {x + 1, y},
+      {x - 1, y},
+      {x, y + 1},
+      {x, y - 1}
+    ]
   end
 
   def parse({line, ix}) do
@@ -44,127 +59,53 @@ defmodule Day03 do
     |> elem(2)
   end
 
-  def is_part_number({x, y}, m) do
-    [
-      {x - 1, y - 1},
-      {x - 1, y + 1},
-      {x + 1, y - 1},
-      {x + 1, y + 1},
-      {x + 1, y},
-      {x - 1, y},
-      {x, y + 1},
-      {x, y - 1}
-    ]
+  def is_part_number(x, m) do
+    x
+    |> neighbors
     |> Enum.any?(fn key ->
-      Map.get(m, key, ".") != "." and not is_num(Map.get(m, key))
+      v = Map.get(m, key, ".")
+      v != "." and not is_num(v)
     end)
   end
 
-  def reducer({{x, y}, v}, {m, seen, total} = acc) do
-    if not is_part_number({x, y}, m) or MapSet.member?(seen, {x, y}) do
+  def reducer({x, v}, {m, seen, total} = acc) do
+    if not is_part_number(x, m) or MapSet.member?(seen, x) do
       acc
     else
-      {num, coords} = build_num({x, y}, v, m)
+      {num, coords} = build_num(x, v, m)
       {m, MapSet.union(coords, seen), total + num}
     end
   end
 
-  def get_nums({x, y}, m) do
-    nums = []
-    seen = MapSet.new()
+  def get_nums(x, m) do
+    x
+    |> neighbors
+    |> Enum.reduce({[], MapSet.new()}, fn c, {nums, seen} ->
+      v = Map.get(m, c, ".")
 
-    {nums, seen} =
-      if is_num(Map.get(m, {x - 1, y - 1}, ".")) and not MapSet.member?(seen, {x - 1, y - 1}) do
-        {n, coords} = build_num({x - 1, y - 1}, m[{x - 1, y - 1}], m)
+      if is_num(v) and not MapSet.member?(seen, c) do
+        {n, coords} = build_num(c, m[c], m)
         {[n | nums], MapSet.union(seen, coords)}
       else
         {nums, seen}
       end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x + 1, y + 1}, ".")) and not MapSet.member?(seen, {x + 1, y + 1}) do
-        {n, coords} = build_num({x + 1, y + 1}, m[{x + 1, y + 1}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x + 1, y - 1}, ".")) and not MapSet.member?(seen, {x + 1, y - 1}) do
-        {n, coords} = build_num({x + 1, y - 1}, m[{x + 1, y - 1}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x - 1, y + 1}, ".")) and not MapSet.member?(seen, {x - 1, y + 1}) do
-        {n, coords} = build_num({x - 1, y + 1}, m[{x - 1, y + 1}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x - 1, y}, ".")) and not MapSet.member?(seen, {x - 1, y}) do
-        {n, coords} = build_num({x - 1, y}, m[{x - 1, y}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x + 1, y}, ".")) and not MapSet.member?(seen, {x + 1, y}) do
-        {n, coords} = build_num({x + 1, y}, m[{x + 1, y}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x, y + 1}, ".")) and not is_num(Map.get(m, {x + 1, y + 1}, ".")) and
-           not is_num(Map.get(m, {x - 1, y + 1}, ".")) and not MapSet.member?(seen, {x, y + 1}) do
-        {n, coords} = build_num({x, y + 1}, m[{x, y + 1}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    {nums, seen} =
-      if is_num(Map.get(m, {x, y - 1}, ".")) and not is_num(Map.get(m, {x + 1, y - 1}, ".")) and
-           not is_num(Map.get(m, {x - 1, y - 1}, ".")) and not MapSet.member?(seen, {x, y - 1}) do
-        {n, coords} = build_num({x, y - 1}, m[{x, y - 1}], m)
-        {[n | nums], MapSet.union(seen, coords)}
-      else
-        {nums, seen}
-      end
-
-    nums
+    end)
+    |> elem(0)
   end
 
-  def reduce_gears({{x, y}, _}, {m, total} = acc) do
+  def reduce_gears({x, _}, {m, total} = acc) do
     any_num =
-      [
-        {x - 1, y - 1},
-        {x - 1, y + 1},
-        {x + 1, y - 1},
-        {x + 1, y + 1},
-        {x + 1, y},
-        {x - 1, y},
-        {x, y + 1},
-        {x, y - 1}
-      ]
+      x
+      |> neighbors
       |> Enum.any?(fn k -> Map.get(m, k, ".") |> is_num end)
 
     if any_num do
-      nums = get_nums({x, y}, m)
+      nums = get_nums(x, m)
 
       nums_prod =
-        if length(nums) == 2 do
-          [a, b] = nums
-          a * b
-        else
-          0
+        case nums do
+          [a, b] -> a * b
+          _ -> 0
         end
 
       {m, total + nums_prod}
@@ -198,15 +139,15 @@ defmodule Day03 do
       |> Enum.reverse()
 
     num_list =
-      Enum.map(left, fn x -> elem(x, 0) end) ++ [v] ++ Enum.map(right, fn x -> elem(x, 0) end)
+      Enum.map(left, &elem(&1, 0)) ++ [v] ++ Enum.map(right, &elem(&1, 0))
 
     num =
       Enum.join(num_list)
       |> String.to_integer()
 
     coords =
-      Enum.map(left, fn x -> elem(x, 1) end) ++
-        [{x, y}] ++ Enum.map(right, fn x -> elem(x, 1) end)
+      Enum.map(left, &elem(&1, 1)) ++
+        [{x, y}] ++ Enum.map(right, &elem(&1, 1))
 
     {num, MapSet.new(coords)}
   end
