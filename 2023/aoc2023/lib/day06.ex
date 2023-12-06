@@ -1,14 +1,7 @@
 defmodule Day06 do
-  # @p1_test [{7, 9}, {15, 40}, {30, 200}]
-  @p1 [{56, 546}, {97, 1927}, {78, 1131}, {75, 1139}]
   def p1 do
-    @p1
-    |> Enum.map(&solve/1)
-    |> Enum.product()
-  end
-
-  def p2_test do
-    solve({71530, 940_200})
+    [{56, 546}, {97, 1927}, {78, 1131}, {75, 1139}]
+    |> Enum.reduce(1, &(solve(&1) * &2))
   end
 
   def p2 do
@@ -16,12 +9,12 @@ defmodule Day06 do
   end
 
   def solve({time, record}) do
-    time
-    |> to_distances()
-    |> Enum.count(&(&1 > record))
-  end
+    s = :math.sqrt(time * time - 4 * record)
 
-  def to_distances(time) do
-    Enum.map(0..time, fn v -> v * (time - v) end)
+    vmax = ((time + s) / 2) |> trunc
+
+    vmin = ((time - s) / 2) |> trunc
+
+    vmax - vmin
   end
 end
