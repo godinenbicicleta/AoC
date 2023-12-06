@@ -20,7 +20,6 @@ type grid [][]byte
 func New(ranges []Range, minX int, maxX int, minY int, maxY int) grid {
 	sizeX := maxX + 1
 	var grid [][]byte
-	fmt.Println(sizeX)
 	for y := 0; y <= maxY+3; y++ {
 		var row []byte
 		for x := 0; x <= sizeX; x++ {
@@ -50,7 +49,6 @@ func (g grid) String() string {
 			}
 		}
 	}
-	fmt.Println("minx", minX)
 	for _, row := range g {
 		for ix, x := range row {
 			if ix >= minX-1 {
@@ -65,13 +63,6 @@ func (g grid) String() string {
 type Point struct {
 	x int
 	y int
-}
-
-func ns(current Point) []Point {
-	return []Point{
-		{x: current.x - 1, y: current.y},
-		{x: current.x + 1, y: current.y},
-	}
 }
 
 func main() {
@@ -122,62 +113,107 @@ func main() {
 		ranges = append(ranges, Range{x0: x0, x1: x1, y0: y, y1: y})
 
 	}
-	fmt.Println(minX, maxX, minY, maxY)
 
 	grid := New(ranges, minX, maxX, minY, maxY)
-	fmt.Println(grid)
 
-	atGoal := func(p Point) bool {
-		return p.y >= maxY
-	}
-	end := false
-	fmt.Println(end)
-	for m := 0; !end; m++ {
-
-		queue := []Point{{x: 500, y: 1}}
+	escapes := func(p Point) bool {
+		stack := []Point{p}
 		seen := make(map[Point]bool)
-		seen[queue[0]] = true
+		goal := p.y + 1
+		for len(stack) > 0 {
+			current := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			seen[current] = true
+			x := current.x
+			y := current.y
+
+			if y >= goal {
+				return true
+			}
+			down := Point{x: x, y: y + 1}
+			if down.y > maxY {
+				continue
+			}
+			if grid[down.y][down.x] == '.' || grid[down.y][down.x] == '|' {
+				stack = append(stack, down)
+				continue
+			}
+			right := Point{x: x + 1, y: y}
+			left := Point{x: x - 1, y: y}
+			if grid[left.y][left.x] == '.' || grid[left.y][left.x] == '|' {
+				if !seen[left] {
+					stack = append(stack, left)
+				}
+			}
+			if grid[right.y][right.x] == '.' || grid[right.y][right.x] == '|' {
+				if !seen[right] {
+					stack = append(stack, right)
+				}
+			}
+
+		}
+		return false
+	}
+	changed := true
+	for changed {
+		changed = false
+		current := Point{x: 500, y: 1}
+		queue := []Point{current}
+		seen := make(map[Point]bool)
 		for len(queue) > 0 {
 			current := queue[0]
 			queue = queue[1:]
-			grid[current.y][current.x] = '|'
-			if atGoal(current) {
-				end = true
+			y := current.y
+			x := current.x
+			seen[current] = true
+			currentVal := grid[y][x]
+			down := Point{x: x, y: y + 1}
+			if down.y > maxY {
+				if currentVal != '|' {
+					changed = true
+				}
+				grid[y][x] = '|'
 				continue
 			}
-			if grid[current.y+1][current.x] == '.' || grid[current.y+1][current.x] == '|' {
-				p := Point{x: current.x, y: current.y + 1}
-				seen[p] = true
-				queue = append(queue, Point{x: current.x, y: current.y + 1})
-				continue
+
+			if grid[down.y][down.x] == '.' || grid[down.y][down.x] == '|' {
+				queue = append(queue, down)
+			} else {
+				for _, p := range []Point{{x: x + 1, y: y}, {x: x - 1, y: y}} {
+					if grid[p.y][p.x] == '.' || grid[p.y][p.x] == '|' {
+						if !seen[p] {
+							queue = append(queue, p)
+						}
+					}
+				}
 			}
-			right := Point{x: current.x + 1, y: current.y}
-			left := Point{x: current.x - 1, y: current.y}
-			added := false
-			if right.x < len(grid[0]) && !seen[right] && (grid[right.y][right.x] == '.' || grid[right.y][right.x] == '|') {
-				queue = append(queue, right)
-				seen[right] = true
-				added = true
+
+			if escapes(current) {
+				if currentVal != '|' {
+					changed = true
+				}
+				grid[y][x] = '|'
+			} else {
+				if currentVal != '~' {
+					changed = true
+				}
+				grid[y][x] = '~'
 			}
-			if left.x >= 0 && !seen[left] && (grid[left.y][left.x] == '.' || grid[left.y][left.x] == '|') {
-				queue = append(queue, left)
-				seen[left] = true
-				added = true
-			}
-			if !added {
-				grid[current.y][current.x] = '~'
-			}
+
 		}
 	}
 
-	fmt.Println(grid)
 	total := 0
+	p2 := 0
 	for y := minY; y <= maxY; y++ {
 		for x := 0; x < len(grid[0]); x++ {
 			if grid[y][x] == '|' || grid[y][x] == '~' {
 				total += 1
 			}
+			if grid[y][x] == '~' {
+				p2 += 1
+			}
 		}
 	}
-	fmt.Println(total, maxY)
+	fmt.Println(total, p2)
 }
