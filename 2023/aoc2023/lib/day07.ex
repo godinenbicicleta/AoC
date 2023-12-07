@@ -52,13 +52,11 @@ defmodule Day07 do
   end
 
   def to_score(s, order) do
-    m =
-      order
-      |> String.split("", trim: true)
-      |> Enum.with_index()
-      |> Enum.into(%{})
-
-    m[s]
+    order
+    |> String.split("", trim: true)
+    |> Enum.with_index()
+    |> Enum.into(%{})
+    |> Map.get(s)
   end
 
   def to_score1(s), do: to_score(s, "23456789TJQKA")
