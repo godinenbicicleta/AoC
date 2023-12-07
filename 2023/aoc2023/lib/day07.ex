@@ -1,6 +1,6 @@
 defmodule Day07 do
   def p1 do
-    run(&mapper/1)
+    run(&mapper1/1)
   end
 
   def p2 do
@@ -51,51 +51,27 @@ defmodule Day07 do
     |> Enum.map(to_score_func)
   end
 
-  def to_score(s) do
-    case s do
-      "A" -> 14
-      "K" -> 13
-      "Q" -> 12
-      "J" -> 11
-      "T" -> 10
-      "9" -> 9
-      "8" -> 8
-      "7" -> 7
-      "6" -> 6
-      "5" -> 5
-      "4" -> 4
-      "3" -> 3
-      "2" -> 2
-    end
+  def to_score(s, order) do
+    m =
+      order
+      |> String.split("", trim: true)
+      |> Enum.with_index()
+      |> Enum.into(%{})
+
+    m[s]
   end
 
-  def to_score2(s) do
-    case s do
-      "A" -> 14
-      "K" -> 13
-      "Q" -> 12
-      "T" -> 10
-      "9" -> 9
-      "8" -> 8
-      "7" -> 7
-      "6" -> 6
-      "5" -> 5
-      "4" -> 4
-      "3" -> 3
-      "2" -> 2
-      "J" -> 0
-    end
-  end
+  def to_score1(s), do: to_score(s, "23456789TJQKA")
 
-  def mapper({s, _}) do
-    type = string_to_type(s)
-    cards = cards_to_order(s, &to_score/1)
+  def to_score2(s), do: to_score(s, "J23456789TQKA")
+
+  def mapper(s, convert_func, score_func) do
+    type = convert_func.(s)
+    cards = cards_to_order(s, score_func)
     {type, cards}
   end
 
-  def mapper2({s, _}) do
-    type = string_to_type2(s)
-    cards = cards_to_order(s, &to_score2/1)
-    {type, cards}
-  end
+  def mapper1({s, _}), do: mapper(s, &string_to_type/1, &to_score1/1)
+
+  def mapper2({s, _}), do: mapper(s, &string_to_type2/1, &to_score2/1)
 end
