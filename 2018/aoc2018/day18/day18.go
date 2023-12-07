@@ -131,11 +131,7 @@ outer:
 	for i := 1; i <= goal; i++ {
 		grid = update(grid)
 		s := state(grid)
-		if len(states[s]) > 0 {
-			states[s] = append(states[s], i)
-		} else {
-			states[s] = []int{i}
-		}
+		states[s] = append(states[s], i)
 		gridStates[s] = grid
 		if len(states[s]) > 2 {
 			cycle = states[s][2] - states[s][1]
