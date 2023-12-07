@@ -39,8 +39,9 @@ defmodule Day07 do
   end
 
   def string_to_type2(s) do
-    ["A", "K", "Q", "T", "9", "8", "7", "6", "5", "4", "3", "2"]
-    |> Enum.map(fn rep -> String.replace(s, "J", rep) end)
+    "AKQT98765432"
+    |> String.split("", trim: true)
+    |> Enum.map(&String.replace(s, "J", &1))
     |> Enum.map(&string_to_type/1)
     |> Enum.max()
   end
