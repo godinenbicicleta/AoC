@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func newGrid(g [][]byte) [][]byte {
-	n := make([][]byte, len(g))
+func newGrid(g Grid) Grid {
+	n := make(Grid, len(g))
 	for i, row := range g {
 		nr := make([]byte, len(row))
 		copy(nr, row)
@@ -17,13 +17,14 @@ func newGrid(g [][]byte) [][]byte {
 	return n
 }
 
+type Grid [][]byte
 type Adj struct {
 	trees      int
 	lumberyard int
 	open       int
 }
 
-func get_ns(x int, y int, grid [][]byte) Adj {
+func get_ns(x int, y int, grid Grid) Adj {
 	var trees, lumberyard, open int
 	for _, p := range []struct {
 		x int
@@ -56,7 +57,7 @@ func get_ns(x int, y int, grid [][]byte) Adj {
 	return Adj{open: open, trees: trees, lumberyard: lumberyard}
 }
 
-func update(grid [][]byte) [][]byte {
+func update(grid Grid) Grid {
 
 	g := newGrid(grid)
 	for y := 0; y < len(grid); y++ {
@@ -85,16 +86,16 @@ func update(grid [][]byte) [][]byte {
 	return g
 }
 
-func state(g [][]byte) string {
+func state(g Grid) string {
 	bts := bytes.Join(g, []byte{'\n'})
 	return string(bts)
 }
 
-func PrintG(g [][]byte) {
+func PrintG(g Grid) {
 	fmt.Println(state(g))
 }
 
-func getTotals(g [][]byte) Adj {
+func getTotals(g Grid) Adj {
 	wood := 0
 	lumb := 0
 	for _, row := range g {
@@ -113,7 +114,7 @@ func getTotals(g [][]byte) Adj {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	var grid [][]byte
+	var grid Grid
 	states := make(map[string][]int)
 	for scanner.Scan() {
 		txt := scanner.Text()
@@ -122,7 +123,7 @@ func main() {
 	cycle := 0
 	states[state(grid)] = []int{0}
 	goal := 1000000000
-	gridStates := make(map[string][][]byte)
+	gridStates := make(map[string]Grid)
 outer:
 	for i := 1; i <= goal; i++ {
 		grid = update(grid)
