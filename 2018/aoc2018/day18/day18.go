@@ -117,11 +117,7 @@ func main() {
 	states := make(map[string][]int)
 	for scanner.Scan() {
 		txt := scanner.Text()
-		row := make([]byte, len(txt))
-		for i := 0; i < len(txt); i++ {
-			row[i] = txt[i]
-		}
-		grid = append(grid, row)
+		grid = append(grid, []byte(txt))
 	}
 	cycle := 0
 	states[state(grid)] = []int{0}
