@@ -1,11 +1,7 @@
 defmodule Day07 do
-  def p1 do
-    run(&mapper1/1)
-  end
+  def p1, do: run(&mapper1/1)
 
-  def p2 do
-    run(&mapper2/1)
-  end
+  def p2, do: run(&mapper2/1)
 
   def run(mapper_func) do
     File.stream!("data/day07.txt")
