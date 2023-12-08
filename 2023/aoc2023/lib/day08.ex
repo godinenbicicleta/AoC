@@ -27,10 +27,7 @@ defmodule Day08 do
 
     max_num = div(Enum.max(nums), 2)
 
-    primes =
-      Stream.iterate(2, &(&1 + 1))
-      |> Stream.filter(&is_prime/1)
-      |> Enum.take_while(&(&1 <= max_num))
+    primes = primes_to(max_num)
 
     mcm(nums, primes)
   end
@@ -47,10 +44,39 @@ defmodule Day08 do
     |> Enum.reduce(1, fn {num, exp}, acc -> acc * num ** exp end)
   end
 
-  def is_prime(n) do
-    Stream.iterate(2, &(&1 + 1))
-    |> Enum.take_while(fn x -> x < n end)
-    |> Enum.all?(fn x -> rem(n, x) > 0 end)
+  def primes_to(maxnum) do
+    primes =
+      2..maxnum
+      |> Enum.map(fn p -> {p, true} end)
+      |> Enum.into(%{})
+
+    primes_filter(primes, 2, maxnum)
+    |> Enum.filter(fn {_, v} -> v end)
+    |> Enum.into([], fn {k, _} -> k end)
+  end
+
+  def primes_filter(primes, num, goal) when goal <= num, do: primes
+
+  def primes_filter(primes, num, goal) do
+    primes =
+      Enum.map(primes, fn
+        {p, false} ->
+          {p, false}
+
+        {p, true} ->
+          if p != num and rem(p, num) == 0 do
+            {p, false}
+          else
+            {p, true}
+          end
+      end)
+      |> Enum.into(%{})
+
+    min_value =
+      primes |> Enum.filter(fn {_, v} -> v end) |> Enum.map(fn {k, _} -> k end) |> Enum.max()
+
+    primes
+    |> primes_filter(min_value, goal)
   end
 
   def factors(num, primes) do
