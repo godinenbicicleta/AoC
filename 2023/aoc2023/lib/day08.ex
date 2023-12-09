@@ -47,51 +47,34 @@ defmodule Day08 do
   def primes_to(maxnum) do
     primes =
       2..maxnum
-      |> Enum.map(fn p -> {p, true} end)
-      |> Enum.into(%{})
+      |> Enum.to_list()
 
     primes_filter(primes, 2, maxnum)
-    |> Enum.filter(fn {_, v} -> v end)
-    |> Enum.into([], fn {k, _} -> k end)
   end
 
   def primes_filter(primes, num, goal) when goal <= num, do: primes
 
   def primes_filter(primes, num, goal) do
     primes =
-      Enum.map(primes, fn
-        {p, false} ->
-          {p, false}
+      primes
+      |> Enum.reject(fn p -> p != num and rem(p, num) == 0 end)
 
-        {p, true} ->
-          if p != num and rem(p, num) == 0 do
-            {p, false}
-          else
-            {p, true}
-          end
-      end)
-      |> Enum.into(%{})
-
-    min_value =
-      primes |> Enum.filter(fn {_, v} -> v end) |> Enum.map(fn {k, _} -> k end) |> Enum.max()
+    min_value = Enum.find(primes, fn p -> p > num end)
 
     primes
     |> primes_filter(min_value, goal)
   end
 
   def factors(num, primes) do
-    Enum.filter(primes, fn p -> rem(num, p) == 0 and p <= num end)
+    Enum.filter(primes, fn p -> p <= num and rem(num, p) == 0 end)
     |> Enum.map(fn p -> {p, to_exp(p, num, 0)} end)
     |> Enum.into(%{})
   end
 
-  def to_exp(prime, num, acc) do
-    if rem(num, prime) == 0 do
-      to_exp(prime, div(num, prime), acc + 1)
-    else
-      acc
-    end
-  end
+  def to_exp(prime, num, acc) when rem(num, prime) == 0,
+    do: to_exp(prime, div(num, prime), acc + 1)
+
+  def to_exp(_prime, _num, acc), do: acc
 
   def preprocess(fname) do
     [instructions, _blank | lines] =
@@ -128,13 +111,8 @@ defmodule Day08 do
       {:halt, res}
     else
       currents =
-        case instruction do
-          "R" ->
-            Enum.map(currents, fn {start, x} -> {start, map[x]["right"]} end) |> Enum.into(%{})
-
-          "L" ->
-            Enum.map(currents, fn {start, x} -> {start, map[x]["left"]} end) |> Enum.into(%{})
-        end
+        Enum.map(currents, fn {start, x} -> {start, map[x][instruction]} end)
+        |> Enum.into(%{})
 
       {:cont, {currents, steps + 1, res}}
     end
@@ -143,11 +121,7 @@ defmodule Day08 do
   def reducer1(_, {"ZZZ", steps}, _), do: {:halt, steps}
 
   def reducer1(instruction, {current, steps}, map) do
-    next =
-      case instruction do
-        "R" -> map[current]["right"]
-        "L" -> map[current]["left"]
-      end
+    next = map[current][instruction]
 
     {:cont, {next, steps + 1}}
   end
@@ -155,7 +129,7 @@ defmodule Day08 do
   def parse(line) do
     [key, rules] = String.split(line, " = ")
 
-    val = Regex.named_captures(~r/\((?<left>\w+), (?<right>\w+)\)/, rules)
+    val = Regex.named_captures(~r/\((?<L>\w+), (?<R>\w+)\)/, rules)
     {key, val}
   end
 end
