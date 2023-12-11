@@ -1,21 +1,6 @@
 defmodule Day10 do
   def main do
-    grid =
-      File.stream!("data/day10.txt")
-      |> Enum.map(fn line ->
-        line
-        |> String.trim()
-        |> String.codepoints()
-        |> Enum.with_index()
-      end)
-      |> Enum.with_index()
-      |> Enum.map(fn {line, y} ->
-        Enum.map(line, fn {c, x} ->
-          {{x, y}, c}
-        end)
-      end)
-      |> List.flatten()
-      |> Enum.into(%{})
+    grid = parse_grid("data/day10.txt")
 
     s =
       grid
@@ -60,6 +45,25 @@ defmodule Day10 do
     end)
     |> Enum.count(&inside?/1)
     |> IO.inspect(label: "p2")
+  end
+
+  def parse_grid(fname) do
+    fname
+    |> File.stream!()
+    |> Enum.map(fn line ->
+      line
+      |> String.trim()
+      |> String.codepoints()
+      |> Enum.with_index()
+    end)
+    |> Enum.with_index()
+    |> Enum.map(fn {line, y} ->
+      Enum.map(line, fn {c, x} ->
+        {{x, y}, c}
+      end)
+    end)
+    |> List.flatten()
+    |> Enum.into(%{})
   end
 
   def replace_s(grid, s, left, right) do
