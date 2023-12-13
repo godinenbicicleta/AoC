@@ -1,5 +1,5 @@
 defmodule Day11 do
-  def p1 do
+  def main do
     grid =
       File.stream!("data/day11.txt")
       |> Enum.map(fn line ->
@@ -16,7 +16,7 @@ defmodule Day11 do
     Enum.each(
       [2, 1_000_000],
       fn times ->
-        galaxies = get_galaxies(grid, times)
+        galaxies = get_galaxies(grid, times - 1)
         gi = galaxies |> Enum.with_index()
 
         res =
@@ -31,14 +31,12 @@ defmodule Day11 do
   end
 
   def get_galaxies(grid, times) do
-    times = times - 1
-
     Enum.filter(grid, fn {_, v} -> v == "#" end)
     |> Enum.map(&elem(&1, 0))
     |> Enum.sort()
-    |> expandx(times)
+    |> expand(times, 0)
     |> Enum.sort_by(&elem(&1, 1))
-    |> expandy(times)
+    |> expand(times, 1)
     |> Enum.sort()
   end
 
@@ -46,49 +44,21 @@ defmodule Day11 do
     abs(x2 - x1) + abs(y2 - y1)
   end
 
-  def expandx(galaxies, times) do
+  def expand(galaxies, times, axis) do
     galaxies
     |> Enum.reduce({[], galaxies}, fn
       p, {[], original} ->
         {[p], original}
 
-      {x, y}, {acc = [prev | _], [prev_original | rest]} ->
-        old_diff = x - elem(prev_original, 0)
+      p, {acc = [prev | _], [prev_original | rest]} ->
+        old_diff = elem(p, axis) - elem(prev_original, axis)
 
-        delta =
-          if old_diff > 1 do
-            (old_diff - 1) * times
-          else
-            0
-          end
+        delta = max(old_diff - 1, 0) * times + old_diff
 
-        new_elem = {elem(prev, 0) + delta + old_diff, y}
+        new_elem = elem(prev, axis) + delta
+        new_p = put_elem(p, axis, new_elem)
 
-        {[new_elem | acc], rest}
-    end)
-    |> elem(0)
-    |> Enum.reverse()
-  end
-
-  def expandy(galaxies, times) do
-    galaxies
-    |> Enum.reduce({[], galaxies}, fn
-      p, {[], original} ->
-        {[p], original}
-
-      {x, y}, {acc = [prev | _], [prev_original | rest]} ->
-        old_diff = y - elem(prev_original, 1)
-
-        delta =
-          if old_diff > 1 do
-            (old_diff - 1) * times
-          else
-            0
-          end
-
-        new_elem = {x, elem(prev, 1) + old_diff + delta}
-
-        {[new_elem | acc], rest}
+        {[new_p | acc], rest}
     end)
     |> elem(0)
     |> Enum.reverse()
