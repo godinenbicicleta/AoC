@@ -1,5 +1,32 @@
 defmodule Day14 do
   @max_cycles 1_000_000_000
+
+  def p2 do
+    grid = read()
+
+    {seen, grid, cycle} =
+      Enum.reduce_while(1..@max_cycles, {grid, %{grid: 0}}, fn cycle, {grid, seen} ->
+        res =
+          [:north, :west, :south, :east]
+          |> Enum.reduce(grid, &do_update(&2, &1))
+
+        if Map.get(seen, res) do
+          {:halt, {seen, res, cycle}}
+        else
+          seen = Map.put(seen, res, cycle)
+          {:cont, {res, seen}}
+        end
+      end)
+
+    first = seen[grid]
+    cycle_size = cycle - first
+
+    ix =
+      rem(@max_cycles - first, cycle_size)
+
+    Enum.find(seen, fn {_g, v} -> v == ix + first end) |> elem(0) |> get_load()
+  end
+
   def main do
     grid = read()
 
