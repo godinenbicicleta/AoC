@@ -11,13 +11,8 @@ defmodule Day14 do
     {_, map} =
       Enum.reduce(1..200, {grid, %{}}, fn cycle, {grid, seen} ->
         res =
-          Enum.reduce(
-            [:north, :west, :south, :east],
-            grid,
-            fn dir, grid ->
-              do_update(grid, dir)
-            end
-          )
+          [:north, :west, :south, :east]
+          |> Enum.reduce(grid, &do_update(&2, &1))
 
         load = get_load(res)
         seen = Map.update(seen, load, [cycle], fn prev -> [cycle | prev] end)
@@ -29,11 +24,11 @@ defmodule Day14 do
 
     cycle_size =
       map
-      |> Enum.map(fn {k, vs} -> {k, Enum.chunk_every(vs, 2, 1, :discard)} end)
-      |> Enum.map(fn {_k, plist} ->
-        Enum.map(plist, fn [left, right] -> left - right end)
+      |> Enum.map(fn {_k, vs} ->
+        Enum.chunk_every(vs, 2, 1, :discard)
+        |> Enum.map(fn [left, right] -> left - right end)
       end)
-      |> Enum.filter(fn diffs -> diffs != [] and Enum.all?(diffs, fn d -> d == hd(diffs) end) end)
+      |> Enum.filter(fn diffs -> Enum.all?(diffs, fn d -> d == hd(diffs) end) end)
       |> hd
       |> hd
 
@@ -44,35 +39,21 @@ defmodule Day14 do
       end
     end)
     |> IO.inspect(label: "p2")
-
-    #
-    # map
-    # |> Enum.filter(fn {_, values} -> goal in values end)
   end
 
   def do_update(grid, dir) do
-    cached = Process.get({grid, dir})
+    sort_func =
+      case dir do
+        :north -> fn {x, y} -> {y, x} end
+        :south -> fn {x, y} -> {-y, x} end
+        :east -> fn {x, y} -> {-x, y} end
+        :west -> fn {x, y} -> {x, y} end
+      end
 
-    if cached != nil do
-      cached
-    else
-      sort_func =
-        case dir do
-          :north -> fn {x, y} -> {y, x} end
-          :south -> fn {x, y} -> {-y, x} end
-          :east -> fn {x, y} -> {-x, y} end
-          :west -> fn {x, y} -> {x, y} end
-        end
-
-      res =
-        grid
-        |> Map.keys()
-        |> Enum.sort_by(sort_func)
-        |> Enum.reduce(grid, fn elem, acc -> reducer(elem, acc, dir) end)
-
-      Process.put({grid, dir}, res)
-      res
-    end
+    grid
+    |> Map.keys()
+    |> Enum.sort_by(sort_func)
+    |> Enum.reduce(grid, fn elem, acc -> reducer(elem, acc, dir) end)
   end
 
   def get_load(grid) do
@@ -84,10 +65,8 @@ defmodule Day14 do
       |> Kernel.+(1)
 
     grid
-    |> Enum.filter(fn {_p, v} -> v == "O" end)
-    |> Enum.reduce(0, fn {{_x, y}, _v}, acc ->
-      acc + maxy - y
-    end)
+    |> Stream.filter(fn {_p, v} -> v == "O" end)
+    |> Enum.reduce(0, fn {{_x, y}, _v}, acc -> acc + maxy - y end)
   end
 
   def reducer(pos, grid, dir) do
@@ -152,9 +131,9 @@ defmodule Day14 do
       |> String.codepoints()
       |> Enum.with_index()
     end)
-    |> Enum.with_index()
-    |> Enum.map(fn {line, y} -> Enum.map(line, fn {v, x} -> {{x, y}, v} end) end)
-    |> Enum.concat()
+    |> Stream.with_index()
+    |> Stream.map(fn {line, y} -> Enum.map(line, fn {v, x} -> {{x, y}, v} end) end)
+    |> Stream.concat()
     |> Enum.into(%{})
   end
 end
