@@ -29,7 +29,7 @@ defmodule Day15 do
       box = update(box, {name, num})
       Map.put(boxes, ix, box)
     else
-      [name, ""] = String.split(label, "-")
+      [name] = String.split(label, "-", trim: true)
       ix = hash(name)
 
       box =
@@ -44,9 +44,9 @@ defmodule Day15 do
   def remove([{name, _} | rest], name), do: rest
   def remove([h | t], name), do: [h | remove(t, name)]
 
-  def update([], {name, num}), do: [{name, num}]
-  def update([{name, _} | rest], {name, num}), do: [{name, num} | rest]
-  def update([head | rest], {name, num}), do: [head | update(rest, {name, num})]
+  def update([], p), do: [p]
+  def update([{name, _} | rest], p = {name, _}), do: [p | rest]
+  def update([head | rest], p), do: [head | update(rest, p)]
 
   def hash(s) do
     s
