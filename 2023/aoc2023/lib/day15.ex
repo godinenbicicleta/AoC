@@ -10,7 +10,7 @@ defmodule Day15 do
     |> IO.inspect(label: "p1")
 
     boxes =
-      Enum.into(0..255, %{}, fn ix -> {ix, []} end)
+      Enum.into(0..255, %{}, &{&1, []})
 
     Enum.reduce(labels, boxes, &reducer/2)
     |> Enum.reduce(0, fn {box_id, vals}, total ->
@@ -25,7 +25,7 @@ defmodule Day15 do
       [name, num] = String.split(label, "=")
       num = String.to_integer(num)
       ix = hash(name)
-      box = boxes[hash(name)]
+      box = boxes[ix]
       box = update(box, {name, num})
       Map.put(boxes, ix, box)
     else
@@ -33,7 +33,7 @@ defmodule Day15 do
       ix = hash(name)
 
       box =
-        boxes[hash(name)]
+        boxes[ix]
         |> remove(name)
 
       Map.put(boxes, ix, box)
