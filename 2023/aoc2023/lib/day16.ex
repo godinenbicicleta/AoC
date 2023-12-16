@@ -6,8 +6,37 @@ defmodule Day16 do
 
     queue = [current]
 
-    {_grid, seen} = run(queue, grid, seen)
+    {grid, seen} = run(queue, grid, seen)
     seen |> Enum.map(fn {x, y, _dir} -> {x, y} end) |> Enum.uniq() |> Enum.count()
+    printg(grid, seen)
+  end
+
+  def printg(grid, seen) do
+    minx = Enum.min_by(grid, fn {x, _y, _} -> x end) |> elem(0)
+    maxx = Enum.min_by(grid, fn {x, _y, _} -> x end) |> elem(0)
+    miny = Enum.min_by(grid, fn {_x, y, _} -> y end) |> elem(1)
+    maxy = Enum.min_by(grid, fn {_x, y, _} -> y end) |> elem(1)
+
+    for y <- maxy..miny do
+      row =
+        for x <- maxx..minx do
+          gridv = grid[{x, y}]
+
+          cond do
+            gridv in ["/", "\\", "-", "|"] -> gridv
+            MapSet.member?(seen, {x, y, :east}) -> ">"
+            MapSet.member?(seen, {x, y, :nort}) -> "^"
+            MapSet.member?(seen, {x, y, :south}) -> "v"
+            MapSet.member?(seen, {x, y, :west}) -> "<"
+            true -> gridv
+          end
+        end
+
+      Enum.reverse(row)
+    end
+    |> Enum.reverse()
+    |> Enum.join("\n")
+    |> IO.puts()
   end
 
   def run([], grid, seen), do: {grid, seen}
