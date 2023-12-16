@@ -1,21 +1,46 @@
 defmodule Day16 do
   def main do
-    grid = read()
-    current = {0, 0, :east}
-    seen = MapSet.new([current])
-
-    queue = [current]
-
-    {grid, seen} = run(queue, grid, seen)
-    seen |> Enum.map(fn {x, y, _dir} -> {x, y} end) |> Enum.uniq() |> Enum.count()
-    printg(grid, seen)
+    p1()
+    p2()
   end
 
-  def printg(grid, seen) do
+  def p1 do
+    read() |> solve({-1, 0, :east}) |> IO.inspect(label: "p1")
+  end
+
+  def p2 do
+  grid = read()
+
+    %{minx: minx, maxx: maxx, miny: miny, maxy: maxy} = dimensions(grid)
+    from_left = miny..maxy |> Enum.map(fn y -> {-1, y, :east} end)
+    from_right = miny..maxy |> Enum.map(fn y -> {maxx + 1, y, :west} end)
+    from_top = minx..maxx |> Enum.map(fn x -> {x, -1, :south} end)
+    from_bottom = minx..maxx |> Enum.map(fn x -> {x, maxy + 1, :north} end)
+
+    Enum.concat([from_left, from_right, from_top, from_bottom])
+    |> Enum.max_by(fn start -> solve(grid, start) end)
+    |> then(&solve(grid, &1))
+    |> IO.inspect(label: "p2")
+  end
+
+  def solve(grid, start) do
+    queue = next(start, grid)
+    seen = MapSet.new(queue)
+
+    {_grid, seen} = run(queue, grid, seen)
+    seen |> Enum.map(fn {x, y, _dir} -> {x, y} end) |> Enum.uniq() |> Enum.count()
+  end
+
+  def dimensions(grid) do
     minx = Enum.min_by(grid, fn {{x, _y}, _} -> x end) |> elem(0) |> elem(0)
     maxx = Enum.max_by(grid, fn {{x, _y}, _} -> x end) |> elem(0) |> elem(0)
     miny = Enum.min_by(grid, fn {{_x, y}, _} -> y end) |> elem(0) |> elem(1)
     maxy = Enum.max_by(grid, fn {{_x, y}, _} -> y end) |> elem(0) |> elem(1)
+    %{minx: minx, maxx: maxx, miny: miny, maxy: maxy}
+  end
+
+  def printg(grid, seen) do
+    %{minx: minx, maxx: maxx, miny: miny, maxy: maxy} = dimensions(grid)
 
     for y <- maxy..miny do
       row =
