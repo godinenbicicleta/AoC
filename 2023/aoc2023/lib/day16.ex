@@ -12,10 +12,10 @@ defmodule Day16 do
   end
 
   def printg(grid, seen) do
-    minx = Enum.min_by(grid, fn {x, _y, _} -> x end) |> elem(0)
-    maxx = Enum.min_by(grid, fn {x, _y, _} -> x end) |> elem(0)
-    miny = Enum.min_by(grid, fn {_x, y, _} -> y end) |> elem(1)
-    maxy = Enum.min_by(grid, fn {_x, y, _} -> y end) |> elem(1)
+    minx = Enum.min_by(grid, fn {{x, _y}, _} -> x end) |> elem(0) |> elem(0)
+    maxx = Enum.max_by(grid, fn {{x, _y}, _} -> x end) |> elem(0) |> elem(0)
+    miny = Enum.min_by(grid, fn {{_x, y}, _} -> y end) |> elem(0) |> elem(1)
+    maxy = Enum.max_by(grid, fn {{_x, y}, _} -> y end) |> elem(0) |> elem(1)
 
     for y <- maxy..miny do
       row =
