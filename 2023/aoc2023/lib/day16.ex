@@ -9,7 +9,7 @@ defmodule Day16 do
   end
 
   def p2 do
-  grid = read()
+    grid = read()
 
     %{minx: minx, maxx: maxx, miny: miny, maxy: maxy} = dimensions(grid)
     from_left = miny..maxy |> Enum.map(fn y -> {-1, y, :east} end)
