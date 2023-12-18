@@ -3,11 +3,14 @@ defmodule Day17 do
   def main do
     grid = read()
 
-    run(grid)
+    run(grid, :first)
+    |> IO.inspect()
+
+    run(grid, :second)
     |> IO.inspect()
   end
 
-  def run(grid) do
+  def run(grid, :second) do
     # heat, x, y, conseq, dir
     queue = [{grid[{1, 0}], 1, 0, 1, ">"}, {grid[{0, 1}], 0, 1, 1, "v"}]
     %{minx: _minx, maxx: maxx, miny: _miny, maxy: maxy} = dimensions(grid)
@@ -17,9 +20,19 @@ defmodule Day17 do
       Enum.map(queue, fn {h, x, y, conseq, dir} -> {{x, y, conseq, dir}, h} end)
       |> Enum.into(%{})
 
-    # run(queue, goal, grid, seen, :second)}
-    {run(queue, goal, grid, seen, :first), run(queue, goal, grid, seen, :second)}
-    |> IO.inspect()
+    run(queue, goal, grid, seen, :second, 0)
+  end
+
+  def run(grid, :first) do
+    queue = [{grid[{1, 0}], 1, 0, 1, ">"}, {grid[{0, 1}], 0, 1, 1, "v"}]
+    %{minx: _minx, maxx: maxx, miny: _miny, maxy: maxy} = dimensions(grid)
+    goal = {maxx, maxy}
+
+    seen =
+      Enum.map(queue, fn {_h, x, y, conseq, dir} -> {x, y, conseq, dir} end)
+      |> Enum.into(MapSet.new())
+
+    run(queue, goal, grid, seen, :first, 0)
   end
 
   def insert(current, []) do
@@ -31,7 +44,7 @@ defmodule Day17 do
     {heat, _, _, _, _} = current
 
     cond do
-      h > heat ->
+      h >= heat ->
         [current, prev | rest]
 
       true ->
@@ -57,7 +70,7 @@ defmodule Day17 do
 
   def can_stop?(_, :first), do: true
 
-  def run([current | rest], goal, grid, seen, part) do
+  def run([current | rest], goal, grid, seen, part, depth) do
     {current_heat, current_x, current_y, current_conseq, current_dir} = current
 
     if {current_x, current_y} == goal and can_stop?(current, part) do
@@ -75,8 +88,12 @@ defmodule Day17 do
           {current_heat + grid[{x, y}], x, y, get_conseq(current_conseq, current_dir, dir), dir}
         end)
         |> Enum.filter(fn {h, x, y, conseq, dir} ->
-          seen[{x, y, conseq, dir}] == nil or
-            seen[{x, y, conseq, dir}] >= h
+          if part == :second do
+            seen[{x, y, conseq, dir}] == nil or
+              seen[{x, y, conseq, dir}] >= h
+          else
+            not MapSet.member?(seen, {x, y, conseq, dir})
+          end
         end)
         |> Enum.filter(fn {_h, _newx, _newy, _new_conseq, new_dir} ->
           if part == :second do
@@ -100,12 +117,18 @@ defmodule Day17 do
         end)
 
       seen =
-        Enum.reduce(candidates, seen, fn {h, x, y, conseq, dir}, seen ->
-          Map.put(seen, {x, y, conseq, dir}, h)
-        end)
+        if part == :second do
+          Enum.reduce(candidates, seen, fn {h, x, y, conseq, dir}, seen ->
+            Map.put(seen, {x, y, conseq, dir}, h)
+          end)
+        else
+          Enum.reduce(candidates, seen, fn {_h, x, y, conseq, dir}, seen ->
+            MapSet.put(seen, {x, y, conseq, dir})
+          end)
+        end
 
       Enum.reduce(candidates, rest, fn c, r -> insert(c, r) end)
-      |> run(goal, grid, seen, part)
+      |> run(goal, grid, seen, part, depth + 1)
     end
   end
 
