@@ -8,121 +8,104 @@ defmodule Day17 do
   end
 
   def run(grid) do
-    queue = [[{0, 0, :right, 0}], [{0, 0, :down, 0}]]
+    # heat, x, y, conseq, dir
+    queue = [{grid[{1, 0}], 1, 0, 1, ">"}, {grid[{0, 1}], 0, 1, 1, "v"}]
     %{minx: _minx, maxx: maxx, miny: _miny, maxy: maxy} = dimensions(grid)
     goal = {maxx, maxy}
-    seen = Map.new([{{0, 0, :right, []}, 0}, {{0, 0, :down, []}, 0}])
-    # {run(queue, goal, grid, seen, :first), run(queue, goal, grid, seen, :second)}
-    run(queue, goal, grid, seen, :second)
+
+    seen =
+      Enum.map(queue, fn {h, x, y, conseq, dir} -> {{x, y, conseq, dir}, h} end)
+      |> Enum.into(%{})
+
+    # run(queue, goal, grid, seen, :second)}
+    {run(queue, goal, grid, seen, :first), run(queue, goal, grid, seen, :second)}
+    |> IO.inspect()
   end
 
-  def insert(path, []) do
-    [path]
+  def insert(current, []) do
+    [current]
   end
 
-  def insert(path = [p0 | _], paths) do
-    first_path = hd(paths)
-    {_, _, _, h} = hd(first_path)
-    {_, _, _, heat} = p0
+  def insert(current, [prev | rest]) do
+    {h, _, _, _, _} = prev
+    {heat, _, _, _, _} = current
 
-    if h > heat do
-      [path | paths]
-    else
-      [first_path | insert(path, tl(paths))]
+    cond do
+      h > heat ->
+        [current, prev | rest]
+
+      true ->
+        [prev | insert(current, rest)]
     end
   end
 
-  def get_next(path = [head | _rest], grid, seen, part) do
-    {x, y, dir, current_heat} = head
+  def is_valid_dir(">", "<"), do: false
+  def is_valid_dir("<", ">"), do: false
+  def is_valid_dir("^", "v"), do: false
+  def is_valid_dir("v", "^"), do: false
+  def is_valid_dir(_, _), do: true
 
-    moves =
-      case dir do
-        :up -> [{x, y - 1, :up}, {x - 1, y, :left}, {x + 1, y, :right}]
-        :down -> [{x, y + 1, :down}, {x - 1, y, :left}, {x + 1, y, :right}]
-        :left -> [{x, y - 1, :up}, {x - 1, y, :left}, {x, y + 1, :down}]
-        :right -> [{x, y - 1, :up}, {x, y + 1, :down}, {x + 1, y, :right}]
-      end
-
-    prev =
-      path
-      |> Enum.take(10)
-      |> Enum.map(fn {x, y, dir, _h} -> {x, y, dir} end)
-
-    moves =
-      moves
-      |> Enum.map(fn {x, y, dir} -> {x, y, dir, grid[{x, y}]} end)
-      |> Enum.filter(fn {_, _, _, h} -> h != nil end)
-      |> Enum.filter(fn {_, _, dir, _} ->
-        if part == :first do
-          valid1?(dir, path)
-        else
-          valid2?(dir, path)
-        end
-      end)
-      |> Enum.filter(fn {x, y, dir, h} ->
-        not Map.has_key?(seen, {x, y, dir, prev}) or
-          seen[{x, y, dir, prev}] > h + current_heat
-      end)
-
-    seen =
-      Enum.reduce(moves, seen, fn {x, y, dir, h}, seen ->
-        Map.update(seen, {x, y, dir, prev}, h + current_heat, fn existing ->
-          max(existing, h + current_heat)
-        end)
-      end)
-
-    moves = Enum.map(moves, fn {x, y, dir, h} -> [{x, y, dir, h + current_heat} | path] end)
-    {moves, seen}
-  end
-
-  def valid1?(_dir, []), do: true
-  def valid1?(_, [_]), do: true
-  def valid1?(_dir, [_, _]), do: true
-  def valid1?(d, [{_, _, d, _}, {_, _, d, _}, {_, _, d, _} | _]), do: false
-  def valid1?(_, _), do: true
-
-  def valid2?(_dir, []), do: true
-  def valid2?(dir, [{_, _, dir, _}]), do: true
-  def valid2?(_, [_]), do: false
-
-  def valid2?(dir, path = [head | tail]) do
-    {_, _, headdir, _} = head
-
-    prevs =
-      path
-      |> Enum.take_while(fn {_, _, d, _} -> d == dir end)
-      |> Enum.count()
-
-    prevt = tail |> Enum.take_while(fn {_, _, d, _} -> d == headdir end) |> Enum.count()
-
-    valid =
-      cond do
-        prevs == 10 -> false
-        headdir == dir -> true
-        prevt < 3 -> false
-        true -> true
-      end
-
-    valid
-  end
-
-  def can_stop([]), do: false
-
-  def can_stop?([h | rest]) do
-    {_, _, d, _} = h
-    Enum.take_while(rest, fn {_, _, dir, _} -> dir == d end) |> Enum.count() |> Kernel.>=(3)
-  end
-
-  def run(paths = [path | rest_paths], goal, grid, seen, part) do
-    {x, y, dir, heat} = hd(path)
-
-    if {x, y} == goal and can_stop?(path) do
-      #       IO.inspect(Enum.reverse(path))
-      heat
+  def get_conseq(current_c, current_dir, new_dir) do
+    if new_dir == current_dir do
+      current_c + 1
     else
-      {next_paths, seen} = get_next(path, grid, seen, part)
-      paths = Enum.reduce(next_paths, rest_paths, fn next, ps -> insert(next, ps) end)
-      run(paths, goal, grid, seen, part)
+      1
+    end
+  end
+
+  def can_stop?({_, _, _, conseq, _}, :second), do: conseq >= 4
+
+  def can_stop?(_, :first), do: true
+
+  def run([current | rest], goal, grid, seen, part) do
+    {current_heat, current_x, current_y, current_conseq, current_dir} = current
+
+    if {current_x, current_y} == goal and can_stop?(current, part) do
+      current_heat
+    else
+      candidates =
+        [
+          {current_x + 1, current_y, ">"},
+          {current_x - 1, current_y, "<"},
+          {current_x, current_y + 1, "v"},
+          {current_x, current_y - 1, "^"}
+        ]
+        |> Enum.filter(fn {x, y, _} -> grid[{x, y}] != nil end)
+        |> Enum.map(fn {x, y, dir} ->
+          {current_heat + grid[{x, y}], x, y, get_conseq(current_conseq, current_dir, dir), dir}
+        end)
+        |> Enum.filter(fn {h, x, y, conseq, dir} ->
+          seen[{x, y, conseq, dir}] == nil or
+            seen[{x, y, conseq, dir}] >= h
+        end)
+        |> Enum.filter(fn {_h, _newx, _newy, _new_conseq, new_dir} ->
+          if part == :second do
+            cond do
+              current_conseq < 4 ->
+                new_dir == current_dir
+
+              current_conseq == 10 ->
+                new_dir != current_dir and is_valid_dir(new_dir, current_dir)
+
+              true ->
+                is_valid_dir(new_dir, current_dir)
+            end
+          else
+            if current_conseq == 3 do
+              new_dir != current_dir and is_valid_dir(new_dir, current_dir)
+            else
+              is_valid_dir(new_dir, current_dir)
+            end
+          end
+        end)
+
+      seen =
+        Enum.reduce(candidates, seen, fn {h, x, y, conseq, dir}, seen ->
+          Map.put(seen, {x, y, conseq, dir}, h)
+        end)
+
+      Enum.reduce(candidates, rest, fn c, r -> insert(c, r) end)
+      |> run(goal, grid, seen, part)
     end
   end
 
