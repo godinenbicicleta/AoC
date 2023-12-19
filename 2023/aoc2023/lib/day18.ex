@@ -103,12 +103,8 @@ defmodule Day18 do
 
   def p1 do
     border = get_border(read1())
-
-    # render(border)
     seed = find_seed(border)
-
     seen = run([seed], border, MapSet.new())
-
     MapSet.size(seen) + MapSet.size(border)
   end
 
@@ -132,14 +128,9 @@ defmodule Day18 do
             find_end_below = find(bordermap, y + 1, end_)
 
             case {find_start_above, find_end_above, find_start_below, find_end_below} do
-              {true, true, _, _} ->
-                {:inside, {start, end_}, new_acc}
-
-              {_, _, true, true} ->
-                {:inside, {start, end_}, new_acc}
-
-              _ ->
-                {:outside, {start, end_}, new_acc}
+              {true, true, _, _} -> {:inside, {start, end_}, new_acc}
+              {_, _, true, true} -> {:inside, {start, end_}, new_acc}
+              _ -> {:outside, {start, end_}, new_acc}
             end
           end
 
@@ -154,14 +145,9 @@ defmodule Day18 do
             find_end_below = find(bordermap, y + 1, end_)
 
             case {find_start_above, find_end_above, find_start_below, find_end_below} do
-              {true, true, _, _} ->
-                {:outside, {start, end_}, new_acc}
-
-              {_, _, true, true} ->
-                {:outside, {start, end_}, new_acc}
-
-              _ ->
-                {:inside, {start, end_}, new_acc}
+              {true, true, _, _} -> {:outside, {start, end_}, new_acc}
+              {_, _, true, true} -> {:outside, {start, end_}, new_acc}
+              _ -> {:inside, {start, end_}, new_acc}
             end
           end
       end)
@@ -180,15 +166,9 @@ defmodule Day18 do
   def run([], _border, seen), do: seen
 
   def run([{x, y} | rest], border, seen) do
-    candidates = [
-      {x + 1, y},
-      {x - 1, y},
-      {x, y + 1},
-      {x, y - 1}
-    ]
-
     {rest, seen} =
-      Enum.reduce(candidates, {rest, seen}, fn c, {rest, seen} ->
+      [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
+      |> Enum.reduce({rest, seen}, fn c, {rest, seen} ->
         if MapSet.member?(seen, c) or MapSet.member?(border, c) do
           {rest, seen}
         else
