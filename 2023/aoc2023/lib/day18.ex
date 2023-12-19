@@ -1,7 +1,7 @@
 defmodule Day18 do
   def main do
-    p1()
-    |> IO.inspect()
+    p1() |> IO.inspect()
+    p2() |> IO.inspect()
   end
 
   def get_border(lines) do
@@ -108,51 +108,91 @@ defmodule Day18 do
     seed = find_seed(border)
 
     seen = run([seed], border, MapSet.new())
-    {border, seen}
-    get_border2(read1())
 
-    #    Enum.reduce_while(b2, 0, fn {y, vals}, _ ->
-    #  a = Enum.reduce([{y, vals}], 0, &reducer/2)
-    #  b = Enum.filter(seen, fn {_, y1} -> y1 == y end) |> Enum.count()
-    #  b = b + (Enum.filter(border, fn {_, y1} -> y1 == y end) |> Enum.count())
-    #
-    #  if a == b do
-    #    {:cont, 0}
-    #  else
-    #    {:halt, y}
-    #  end
-    # end)
+    MapSet.size(seen) + MapSet.size(border)
   end
 
-  def reducer({_y, intervals}, {bordermap, acc}) do
-    IO.inspect(intervals)
-
-    {in_out, prev, ytotal} =
+  def reducer({y, intervals}, {bordermap, acc}) do
+    {_in_out, _prev, ytotal} =
       Enum.reduce(intervals, {:outside, nil, acc}, fn
-        {start, end_}, {:inside, {prev_start, prev_end}, acc2} ->
+        {start, end_}, {:inside, {_prev_start, prev_end}, acc2} ->
           if start == end_ do
-            {:outside, {start, end_}, acc2 + start - prev_end - 1 + end_ - start + 1}
+            {:outside, {start, end_}, acc2 + start - prev_end}
           else
-            {:outside, {start, end_}, acc2 + start - prev_end - 1 + end_ - start + 1}
+            new_acc = acc2 + start - prev_end - 1 + end_ - start + 1
+
+            find_start_above =
+              bordermap[y - 1] != nil and
+                Enum.find(bordermap[y - 1], fn {s, e} -> s == start and e == start end) != nil
+
+            find_start_below =
+              bordermap[y - 1] != nil and
+                Enum.find(bordermap[y + 1], fn {s, e} -> s == start and e == start end) != nil
+
+            find_end_above =
+              bordermap[y - 1] != nil and
+                Enum.find(bordermap[y - 1], fn {s, e} -> s == end_ and e == end_ end) != nil
+
+            find_end_below =
+              bordermap[y + 1] != nil and
+                Enum.find(bordermap[y + 1], fn {s, e} -> s == end_ and e == end_ end) != nil
+
+            case {find_start_above, find_end_above, find_start_below, find_end_below} do
+              {true, true, _, _} ->
+                {:inside, {start, end_}, new_acc}
+
+              {_, _, true, true} ->
+                {:inside, {start, end_}, new_acc}
+
+              _ ->
+                {:outside, {start, end_}, new_acc}
+            end
           end
 
-        {start, end_}, {:outside, prev, acc2} ->
+        {start, end_}, {:outside, _prev, acc2} ->
           if start == end_ do
-            {:inside, {start, end_}, acc2 + end_ - start + 1}
+            {:inside, {start, end_}, acc2 + 1}
           else
-            {:inside, {start, end_}, acc2 + end_ - start + 1}
+            new_acc = acc2 + end_ - start + 1
+
+            find_start_above =
+              bordermap[y - 1] != nil and
+                Enum.find(bordermap[y - 1], fn {s, e} -> s == start and e == start end) != nil
+
+            find_start_below =
+              bordermap[y + 1] != nil and
+                Enum.find(bordermap[y + 1], fn {s, e} -> s == start and e == start end) != nil
+
+            find_end_above =
+              bordermap[y - 1] != nil and
+                Enum.find(bordermap[y - 1], fn {s, e} -> s == end_ and e == end_ end) != nil
+
+            find_end_below =
+              bordermap[y + 1] != nil and
+                Enum.find(bordermap[y + 1], fn {s, e} -> s == end_ and e == end_ end) != nil
+
+            case {find_start_above, find_end_above, find_start_below, find_end_below} do
+              {true, true, _, _} ->
+                {:outside, {start, end_}, new_acc}
+
+              {_, _, true, true} ->
+                {:outside, {start, end_}, new_acc}
+
+              _ ->
+                {:inside, {start, end_}, new_acc}
+            end
           end
       end)
 
-    IO.inspect({in_out, prev, ytotal})
-    ytotal
+    {bordermap, ytotal}
   end
 
   def p2 do
-    bordermap = get_border2(read1())
+    bordermap = get_border2(read2())
 
     bordermap
     |> Enum.reduce({bordermap, 0}, &reducer/2)
+    |> elem(1)
   end
 
   def run([], _border, seen), do: seen
@@ -167,15 +207,10 @@ defmodule Day18 do
 
     {rest, seen} =
       Enum.reduce(candidates, {rest, seen}, fn c, {rest, seen} ->
-        cond do
-          MapSet.member?(seen, c) ->
-            {rest, seen}
-
-          MapSet.member?(border, c) ->
-            {rest, seen}
-
-          true ->
-            {[c | rest], MapSet.put(seen, c)}
+        if MapSet.member?(seen, c) or MapSet.member?(border, c) do
+          {rest, seen}
+        else
+          {[c | rest], MapSet.put(seen, c)}
         end
       end)
 
@@ -207,7 +242,7 @@ defmodule Day18 do
   end
 
   def read1() do
-    File.stream!("data/day18_test2.txt")
+    File.stream!("data/day18.txt")
     |> Enum.map(fn line ->
       line
       |> String.trim()
@@ -217,7 +252,7 @@ defmodule Day18 do
   end
 
   def read2() do
-    File.stream!("data/day18_test2.txt")
+    File.stream!("data/day18.txt")
     |> Enum.map(fn line ->
       line
       |> String.trim()
@@ -228,7 +263,6 @@ defmodule Day18 do
       direction = String.slice(rgb, 7, 1) |> to_dir()
       {direction, distance}
     end)
-    |> IO.inspect()
   end
 
   def to_dir("0"), do: "R"
