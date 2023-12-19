@@ -112,6 +112,11 @@ defmodule Day18 do
     MapSet.size(seen) + MapSet.size(border)
   end
 
+  def find(bordermap, key, value) do
+    bordermap[key] != nil and
+      Enum.find(bordermap[key], fn {s, e} -> s == value and e == value end) != nil
+  end
+
   def reducer({y, intervals}, {bordermap, acc}) do
     {_in_out, _prev, ytotal} =
       Enum.reduce(intervals, {:outside, nil, acc}, fn
@@ -121,21 +126,10 @@ defmodule Day18 do
           else
             new_acc = acc2 + start - prev_end - 1 + end_ - start + 1
 
-            find_start_above =
-              bordermap[y - 1] != nil and
-                Enum.find(bordermap[y - 1], fn {s, e} -> s == start and e == start end) != nil
-
-            find_start_below =
-              bordermap[y - 1] != nil and
-                Enum.find(bordermap[y + 1], fn {s, e} -> s == start and e == start end) != nil
-
-            find_end_above =
-              bordermap[y - 1] != nil and
-                Enum.find(bordermap[y - 1], fn {s, e} -> s == end_ and e == end_ end) != nil
-
-            find_end_below =
-              bordermap[y + 1] != nil and
-                Enum.find(bordermap[y + 1], fn {s, e} -> s == end_ and e == end_ end) != nil
+            find_start_above = find(bordermap, y - 1, start)
+            find_start_below = find(bordermap, y + 1, start)
+            find_end_above = find(bordermap, y - 1, end_)
+            find_end_below = find(bordermap, y + 1, end_)
 
             case {find_start_above, find_end_above, find_start_below, find_end_below} do
               {true, true, _, _} ->
@@ -154,22 +148,10 @@ defmodule Day18 do
             {:inside, {start, end_}, acc2 + 1}
           else
             new_acc = acc2 + end_ - start + 1
-
-            find_start_above =
-              bordermap[y - 1] != nil and
-                Enum.find(bordermap[y - 1], fn {s, e} -> s == start and e == start end) != nil
-
-            find_start_below =
-              bordermap[y + 1] != nil and
-                Enum.find(bordermap[y + 1], fn {s, e} -> s == start and e == start end) != nil
-
-            find_end_above =
-              bordermap[y - 1] != nil and
-                Enum.find(bordermap[y - 1], fn {s, e} -> s == end_ and e == end_ end) != nil
-
-            find_end_below =
-              bordermap[y + 1] != nil and
-                Enum.find(bordermap[y + 1], fn {s, e} -> s == end_ and e == end_ end) != nil
+            find_start_above = find(bordermap, y - 1, start)
+            find_start_below = find(bordermap, y + 1, start)
+            find_end_above = find(bordermap, y - 1, end_)
+            find_end_below = find(bordermap, y + 1, end_)
 
             case {find_start_above, find_end_above, find_start_below, find_end_below} do
               {true, true, _, _} ->
