@@ -1,27 +1,29 @@
 defmodule Day19 do
   def main do
-    p1()
-    p2()
+    p1() |> IO.inspect()
+    p2() |> IO.inspect()
   end
 
   def p2 do
     {workflows, _rankings} = read()
 
-    {true, paths} =
-      solve(workflows, "in")
-
-    paths
+    solve(workflows, "in")
     |> Enum.map(fn path -> Enum.group_by(path, &elem(&1, 0), fn {_, a, b} -> {a, b} end) end)
-    |> Enum.map(fn line ->
-      Enum.map(["a", "m", "x", "s"], fn label ->
-        Enum.reduce(line[label] || [], 1..4000, fn {op, num}, r ->
-          Enum.filter(r, fn x -> apply(Kernel, op, [x, num]) end)
+    |> Enum.reduce(0, fn line, acc ->
+      Enum.reduce(["a", "m", "x", "s"], 1, fn label, p ->
+        Enum.reduce(line[label] || [], 1..4000, fn {op, num}, rstart..rend ->
+          case op do
+            :< -> rstart..min(rend, num - 1)
+            :<= -> rstart..min(rend, num)
+            :> -> max(rstart, num + 1)..rend
+            :>= -> max(rstart, num)..rend
+          end
         end)
-        |> Enum.count()
+        |> Range.size()
+        |> Kernel.*(p)
       end)
-      |> Enum.product()
+      |> Kernel.+(acc)
     end)
-    |> Enum.sum()
   end
 
   def solve(workflows, label) do
@@ -29,51 +31,23 @@ defmodule Day19 do
     follow(rules, workflows)
   end
 
-  def follow("A", _workflows), do: {true, [[]]}
-  def follow(["A"], _workflows), do: {true, [[]]}
-  def follow("R", _), do: {false, nil}
-  def follow(["R"], _), do: {false, nil}
+  def follow("A", _workflows), do: [[]]
+  def follow(["A"], _workflows), do: [[]]
+  def follow("R", _), do: []
+  def follow(["R"], _), do: []
+  def follow(label, ws) when is_binary(label), do: follow(ws[label], ws)
+  def follow([label], ws) when is_binary(label), do: follow(ws[label], ws)
 
-  def follow(label, workflows) when is_binary(label),
-    do: follow(workflows[label], workflows)
-
-  def follow([label], workflows) when is_binary(label),
-    do: follow(workflows[label], workflows)
-
-  def follow([{name, op, cond, dest} | rest], workflows) do
-    {success, paths} = follow(rest, workflows)
-
+  def follow([{name, op, cond, dest} | rest], ws) do
     if_false =
-      if success do
-        {true, Enum.map(paths, fn p -> [{name, flip(op), cond} | p] end)}
-      else
-        {false, nil}
-      end
+      follow(rest, ws)
+      |> Enum.map(fn p -> [{name, flip(op), cond} | p] end)
 
     if_true =
-      cond do
-        dest == "A" ->
-          {true, [[{name, op, cond}]]}
+      follow(ws[dest] || dest, ws)
+      |> Enum.map(fn p -> [{name, op, cond} | p] end)
 
-        dest == "R" ->
-          {false, nil}
-
-        true ->
-          {success, paths} = follow(workflows[dest], workflows)
-
-          if success do
-            {true, Enum.map(paths, fn p -> [{name, op, cond} | p] end)}
-          else
-            {false, nil}
-          end
-      end
-
-    case [if_true, if_false] do
-      [{true, p1}, {true, p2}] -> {true, p1 ++ p2}
-      [{true, p1}, {false, _}] -> {true, p1}
-      [{false, _}, {true, p2}] -> {true, p2}
-      _ -> {false, nil}
-    end
+    if_true ++ if_false
   end
 
   def flip(:<), do: :>=
@@ -83,15 +57,16 @@ defmodule Day19 do
     {workflows, rankings} = read()
 
     Enum.reduce(rankings, 0, fn ranking, acc ->
-      case run(ranking, workflows, "in") do
-        {1, 0} -> acc + (Map.values(ranking) |> Enum.sum())
-        _ -> acc
+      if run(ranking, workflows, "in") do
+        Enum.reduce(ranking, acc, fn {_, v}, acc -> acc + v end)
+      else
+        acc
       end
     end)
   end
 
-  def run(_ranking, _workflows, "A"), do: {1, 0}
-  def run(_ranking, _workflows, "R"), do: {0, 1}
+  def run(_ranking, _workflows, "A"), do: true
+  def run(_ranking, _workflows, "R"), do: false
 
   def run(ranking, workflows, label) do
     rules = workflows[label]
@@ -99,10 +74,10 @@ defmodule Day19 do
     Enum.reduce_while(rules, nil, fn rule, _acc ->
       cond do
         rule == "A" ->
-          {:halt, {1, 0}}
+          {:halt, true}
 
         rule == "R" ->
-          {:halt, {0, 1}}
+          {:halt, false}
 
         is_binary(rule) ->
           {:halt, run(ranking, workflows, rule)}
