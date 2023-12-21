@@ -43,30 +43,21 @@ defmodule Day20 do
           Map.put(st, key, m)
       end)
 
-    %{low: low, high: high, depth: depth, accs: accs, sts: sts} =
-      run_while(pulses, state, state, %{low: 1, high: 0}, 0, [%{}], [state])
-
-    (low * high * div(1000, depth) * div(1000, depth))
-    |> IO.inspect()
-
-    {accs, sts}
+    run_while(pulses, state, state, %{low: 1, high: 0}, 0)
   end
 
-  def run_while(pulses, state, target, lh, depth, accs = [acc | _rest], sts) do
+  def run_while(pulses, state, target, lh, depth) do
     depth = depth + 1
 
-    {new_state, %{low: low, high: high}, _, acc} =
-      run(pulses, state, lh, depth, acc)
+    {new_state, %{low: low, high: high}, _} =
+      run(pulses, state, lh, depth)
 
-    sts = [new_state | sts]
-
-    accs = [acc | accs]
-
-    if new_state == target or depth == 1_00_000 do
-      %{low: low, high: high, depth: depth, accs: accs, sts: sts}
-    else
-      run_while(pulses, new_state, target, %{low: low + 1, high: high}, depth, accs, sts)
+    if rem(depth, 1_000_000) == 0 do
+      IO.puts("depth:  #{depth}")
+      IO.inspect(state["tg"])
     end
+
+    run_while(pulses, new_state, target, %{low: low + 1, high: high}, depth)
   end
 
   def print_state(state) do
@@ -76,7 +67,7 @@ defmodule Day20 do
     |> IO.inspect()
   end
 
-  def resolve_pulse({pulse, to, from}, {state, new_pulses, %{low: low, high: high}, depth, acc}) do
+  def resolve_pulse({pulse, to, from}, {state, new_pulses, %{low: low, high: high}, depth}) do
     lowhigh =
       if pulse == :low do
         %{low: low + 1, high: high}
@@ -88,17 +79,6 @@ defmodule Day20 do
     if to == "rx" and pulse == :low do
       throw("#{depth}")
     end
-
-    acc = Map.put_new(acc, to, %{low: 0, high: 0})
-
-    acc =
-      Map.update(acc, to, nil, fn %{low: low, high: high} ->
-        if pulse == :low do
-          %{low: low + 1, high: high}
-        else
-          %{low: low, high: high + 1}
-        end
-      end)
 
     # take action on state, 
     if state[to] do
@@ -161,21 +141,21 @@ defmodule Day20 do
           new_pulses
         end
 
-      {new_state, new_pulses, lowhigh, depth, acc}
+      {new_state, new_pulses, lowhigh, depth}
     else
-      {state, new_pulses, lowhigh, depth, acc}
+      {state, new_pulses, lowhigh, depth}
     end
   end
 
-  def run([], state, lowhigh, depth, acc) do
-    {state, lowhigh, depth, acc}
+  def run([], state, lowhigh, depth) do
+    {state, lowhigh, depth}
   end
 
-  def run(pulses, state, lowhigh, depth, acc) do
-    {state, pulses, lowhigh, depth, acc} =
-      Enum.reduce(pulses, {state, [], lowhigh, depth, acc}, &resolve_pulse/2)
+  def run(pulses, state, lowhigh, depth) do
+    {state, pulses, lowhigh, depth} =
+      Enum.reduce(pulses, {state, [], lowhigh, depth}, &resolve_pulse/2)
 
-    run(pulses, state, lowhigh, depth, acc)
+    run(pulses, state, lowhigh, depth)
   end
 
   def parse(line) do
