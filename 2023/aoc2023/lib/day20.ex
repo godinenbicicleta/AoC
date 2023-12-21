@@ -62,7 +62,7 @@ defmodule Day20 do
 
     accs = [acc | accs]
 
-    if new_state == target or depth == 10000_000 do
+    if new_state == target or depth == 1_00_000 do
       %{low: low, high: high, depth: depth, accs: accs, sts: sts}
     else
       run_while(pulses, new_state, target, %{low: low + 1, high: high}, depth, accs, sts)
