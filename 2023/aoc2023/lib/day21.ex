@@ -16,6 +16,36 @@ defmodule Day21 do
     |> MapSet.size()
   end
 
+  def run(queue, grid, seen, maxsteps, res, rescale_func) do
+    {{:value, {{x, y}, steps}}, queue} = :queue.out(queue)
+
+    if steps == maxsteps do
+      res = MapSet.new(:queue.to_list(queue))
+      MapSet.put(res, {x, y})
+    else
+      candidates =
+        [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
+        |> Enum.filter(fn {i, j} ->
+          {newx, newy} = rescale_func.({i, j})
+
+          grid[{newx, newy}] != "#" and
+            not MapSet.member?(seen, {i, j, steps + 1})
+        end)
+
+      seen =
+        Enum.reduce(candidates, seen, fn {x, y}, seen ->
+          MapSet.put(seen, {x, y, steps + 1})
+        end)
+
+      queue =
+        Enum.reduce(candidates, queue, fn c, q ->
+          :queue.in({c, steps + 1}, q)
+        end)
+
+      run(queue, grid, seen, maxsteps, res, rescale_func)
+    end
+  end
+
   def rescale(griddimx, griddimy) do
     fn {i, j} ->
       newx =
@@ -33,44 +63,6 @@ defmodule Day21 do
         end
 
       {newx, newy}
-    end
-  end
-
-  def run(queue, grid, seen, maxsteps, res, rescale_func) do
-    if :queue.is_empty(queue) do
-      res
-    else
-      {{:value, {{x, y}, steps}}, queue} = :queue.out(queue)
-
-      cond do
-        steps > maxsteps ->
-          res
-
-        steps == maxsteps ->
-          res = MapSet.put(res, {x, y})
-          run(queue, grid, seen, maxsteps, res, rescale_func)
-
-        true ->
-          candidates =
-            [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
-            |> Enum.filter(fn {i, j} ->
-              {newx, newy} = rescale_func.({i, j})
-
-              grid[{newx, newy}] != "#" and not MapSet.member?(seen, {i, j, steps + 1})
-            end)
-
-          seen =
-            Enum.reduce(candidates, seen, fn {x, y}, seen ->
-              MapSet.put(seen, {x, y, steps + 1})
-            end)
-
-          queue =
-            Enum.reduce(candidates, queue, fn c, q ->
-              :queue.in({c, steps + 1}, q)
-            end)
-
-          run(queue, grid, seen, maxsteps, res, rescale_func)
-      end
     end
   end
 
