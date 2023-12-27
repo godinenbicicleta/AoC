@@ -8,15 +8,70 @@ import (
 )
 
 func main() {
-	grid := readGrid("data/day21.txt")
+	grid := readGrid("data/day21_test.txt")
 	dimx := len(grid[0])
 	dimy := len(grid)
+	var start Point
+	for y, row := range grid {
+		for x, b := range row {
+			if b == 'S' {
+				start = Point{x: x, y: y}
+			}
+		}
+	}
 
 	rescale_func := rescale(dimx, dimy)
 
-	total := run_for_steps(26501365, grid, rescale_func)
-	fmt.Println("Total: ", total)
+	//     run_for_steps(26501365, grid, rescale_func)
+	steps := 0
+	total := 1
+	maxsteps := 5000
+	var prev map[Point]struct{}
+	queue := []Point{start}
+	for steps < maxsteps {
+		steps++
+		//		if steps%1000 == 0 {
+		//			fmt.Println(steps)
+		//		}
+		candidates := make(map[Point]struct{})
+		for _, p := range queue {
+			for _, c := range moves(p.x, p.y, grid, rescale_func) {
+				if _, ok := prev[c]; ok {
+					continue
+				}
+				candidates[c] = struct{}{}
+			}
+		}
+		prev = make(map[Point]struct{})
+		for _, q := range queue {
+			prev[q] = struct{}{}
+		}
 
+		if steps%2 == 0 {
+			total += len(candidates)
+			fmt.Println(total)
+		}
+
+		queue = []Point{}
+		for k := range candidates {
+			queue = append(queue, k)
+		}
+	}
+
+	fmt.Println(total)
+
+}
+
+func moves(i int, j int, grid [][]byte, rescale_func func(int, int) (int, int)) []Point {
+	var ms []Point
+	for _, p := range []Point{{i + 1, j}, {i - 1, j}, {i, j + 1}, {i, j - 1}} {
+		sx, sy := rescale_func(p.x, p.y)
+		if grid[sy][sx] != '#' {
+			ms = append(ms, p)
+		}
+
+	}
+	return ms
 }
 
 type Point struct {
