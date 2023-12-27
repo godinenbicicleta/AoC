@@ -1,9 +1,5 @@
 defmodule Day22 do
-  def main do
-    p1()
-  end
-
-  def p1() do
+  def main() do
     {briqs, _moved} = read() |> run
 
     briqs
