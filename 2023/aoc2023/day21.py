@@ -62,6 +62,9 @@ def renderPoints(ps):
 
 
 def p1():
+    """
+    the result is the sum of the border size at steps 0, 2, 4, ... up to 64
+    """
     maxsteps = 64
 
     total = 1
@@ -85,6 +88,19 @@ def p1():
 
 
 def p2():
+    """
+    the result is the sum of the border size at steps 1, 3, 5, ...
+
+    after a while, the size of the border starts increasing by the same numbers
+    over an over again. For the example the border starts growing with this
+    deltas:
+
+    [40, 60, 64, 64, 64,50, 50, 60, 68, 60, 68]
+    and then it repeats again (the size of the list is 11)
+
+    so if at some point the border grows by 40, after 11 steps it will grow by 40 from the previous value and so on
+
+    """
     maxsteps = 1000
 
     total = 0
