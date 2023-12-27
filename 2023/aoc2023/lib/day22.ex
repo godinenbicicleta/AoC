@@ -4,76 +4,76 @@ defmodule Day22 do
   end
 
   def p1() do
-    briqs = read() |> run
+    {briqs, _moved} = read() |> run
 
     briqs
-    |> Enum.map(fn b ->
-      without = Enum.reject(briqs, fn br -> br == b end)
+    |> Enum.with_index()
+    |> Enum.map(fn {_briq, index} ->
+      without =
+        List.delete_at(briqs, index)
 
-      new = without |> run
+      {_new, moved} =
+        run(without)
 
-      collapsed_new = new |> collapse
-
-      if collapsed_new == collapse(without), do: {1, 0}, else: {0, diff(new, without)}
+      if moved == 0, do: {1, 0}, else: {0, moved}
     end)
-    |> Enum.reduce({0, 0}, fn {x, y}, {a, b} -> {x + a, y + b} end)
-  end
-
-  def diff(left, right) do
-    Enum.reduce(left, 0, fn row, total ->
-      total + if Enum.any?(right, fn r -> r == row end), do: 0, else: 1
-    end)
-  end
-
-  def collapse(briqs) do
-    Enum.reduce(briqs, MapSet.new(), fn b, acc -> MapSet.union(b, acc) end)
+    |> Enum.reduce({0, 0}, fn {x, y}, {a, b} -> {a + x, y + b} end)
   end
 
   def run(briqs) do
-    briqs
-    |> Enum.reduce([], &insert/2)
-    |> Enum.sort_by(fn briq ->
-      minz = Enum.min_by(briq, fn {_, _, z} -> z end) |> elem(2)
-      miny = Enum.min_by(briq, fn {_, y, _z} -> y end) |> elem(1)
-      minx = Enum.min_by(briq, fn {x, _, _z} -> x end) |> elem(0)
-      {minz, miny, minx}
-    end)
+    {b, m} =
+      briqs
+      |> Enum.reduce(
+        {[], 0},
+        fn briq, {briqs, total} ->
+          {new_briq, new_briqs} = insert(briq, briqs)
+          if new_briq == briq, do: {new_briqs, total}, else: {new_briqs, total + 1}
+        end
+      )
+
+    {Enum.reverse(b), m}
   end
 
   def insert(b, []) do
     case min_max_z(b) do
-      {1, _} -> [b]
-      _ -> [move_down(b)]
+      {1, _} -> {b, [b]}
+      _ -> insert(move_down(b), [])
     end
   end
 
   def insert(briq, briqs) do
     down = move_down(briq)
-    union = Enum.reduce(briqs, MapSet.new(), fn x, acc -> MapSet.union(acc, x) end)
     minz = min_max_z(briq) |> elem(0)
 
-    disjoint = MapSet.disjoint?(down, union)
+    disjoint = disjoint?(down, briqs)
 
-    cond do
-      disjoint and minz > 1 ->
-        insert(down, briqs)
-
-      true ->
-        [briq | briqs]
+    if disjoint and minz > 1 do
+      insert(down, briqs)
+    else
+      {briq, [briq | briqs]}
     end
   end
 
-  def move_down(points) do
-    Enum.map(points, fn {x, y, z} -> {x, y, max(z - 1, 1)} end) |> Enum.into(MapSet.new())
+  def disjoint?(_, []), do: true
+
+  def disjoint?(briq, [b | rest]) do
+    disjoint?(briq, b) and disjoint?(briq, rest)
   end
 
-  def min_max_z(points) do
-    {mi, ma} = Enum.min_max_by(points, fn {_x, _y, z} -> z end)
-    {elem(mi, 2), elem(ma, 2)}
+  def disjoint?({a, b, c}, {d, e, f}) do
+    Range.disjoint?(a, d) or
+      Range.disjoint?(b, e) or
+      Range.disjoint?(c, f)
   end
+
+  def move_down(b = {rx, ry, z0..z1}) do
+    if z0 > 1, do: {rx, ry, (z0 - 1)..(z1 - 1)}, else: b
+  end
+
+  def min_max_z({_, _, z0..z1}), do: {z0, z1}
 
   def read() do
-    File.stream!("data/day22_test.txt")
+    File.stream!("data/day22.txt")
     |> Enum.map(fn line ->
       line
       |> String.trim()
@@ -82,11 +82,7 @@ defmodule Day22 do
       |> Enum.zip()
       |> Enum.map(fn {s, e} -> String.to_integer(s)..String.to_integer(e) end)
     end)
-    |> Enum.sort_by(fn [_x, _y, z] -> z end)
-    |> Enum.map(fn [rx, ry, rz] ->
-      for x <- rx, y <- ry, z <- rz, into: MapSet.new() do
-        {x, y, z}
-      end
-    end)
+    |> Enum.sort_by(fn [_x, _y, z0.._z1] -> z0 end)
+    |> Enum.map(fn [x, y, z] -> {x, y, z} end)
   end
 end
