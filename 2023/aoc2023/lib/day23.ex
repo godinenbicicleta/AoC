@@ -28,24 +28,45 @@ defmodule Day23 do
   def run2(_grid, [], _goal, maxpath), do: maxpath
 
   def run2(grid, [{{x, y}, seen} | queue], {x, y}, maxpath) do
-    run2(grid, queue, {x, y}, max(MapSet.size(seen) - 1, maxpath))
+    maxpath = max(MapSet.size(seen) - 1, maxpath)
+    run2(grid, queue, {x, y}, maxpath)
   end
 
   def run2(grid, [{{x, y}, seen} | queue], goal, maxpath) do
     candidates =
-      [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
+      [{x - 1, y}, {x, y - 1}, {x, y + 1}, {x + 1, y}]
 
     candidates =
       candidates
-      |> Enum.reject(fn {x, y} -> grid[{x, y}] == nil end)
-      |> Enum.reject(fn {x, y} -> grid[{x, y}] == "#" end)
-      |> Enum.reject(fn {x, y} -> MapSet.member?(seen, {x, y}) end)
+      |> Enum.reject(fn {x, y} ->
+        grid[{x, y}] == nil or grid[{x, y}] == "#" or MapSet.member?(seen, {x, y})
+      end)
 
     candidates = candidates |> Enum.map(fn {i, j} -> {{i, j}, MapSet.put(seen, {i, j})} end)
 
-    queue = candidates ++ queue
+    queue =
+      candidates ++ queue
 
     run2(grid, queue, goal, maxpath)
+  end
+
+  def can_reach?(_, [], _, _), do: false
+
+  def can_reach?(_, [{x, y} | _rest], {x, y}, _), do: true
+
+  def can_reach?(grid, [{x, y} | rest], goal, seen) do
+    candidates =
+      [{x, y + 1}, {x + 1, y}, {x - 1, y}, {x, y - 1}]
+
+    candidates =
+      candidates
+      |> Enum.reject(fn {x, y} ->
+        grid[{x, y}] == nil or grid[{x, y}] == "#" or MapSet.member?(seen, {x, y})
+      end)
+
+    seen = Enum.reduce(candidates, seen, fn c, seen -> MapSet.put(seen, c) end)
+
+    can_reach?(grid, candidates ++ rest, goal, seen)
   end
 
   def run(_grid, [], _goal, sols), do: sols
