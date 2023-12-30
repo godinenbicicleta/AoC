@@ -1,6 +1,3 @@
-import sys
-
-sys.setrecursionlimit(3500)
 with open("data/day25.txt") as f:
     data = [line.strip().split(": ") for line in f]
 
@@ -12,35 +9,7 @@ for key, vstr in data:
         g[v] = g.get(v, []) + [key]
 
 
-edges = []
-nodes = tuple(g.keys())
-
-for k, vs in g.items():
-    for v in vs:
-        if (k, v) in edges:
-            continue
-        if (v, k) in edges:
-            continue
-        edges.append((k, v))
-
-
-def solve(g, path, unvisited, visited):
-    if len(unvisited) == 0:
-        return path
-    current = path[-1]
-    for n in g[current]:
-        if n in visited:
-            continue
-        path.append(n)
-        unvisited.remove(n)
-        visited.add(n)
-        newpath = solve(g, path, unvisited, visited)
-        if newpath:
-            return newpath
-        path.pop()
-        unvisited.add(n)
-        visited.remove(n)
-    return None
+nodes = list(g.keys())
 
 
 def run(i, removed):
@@ -61,20 +30,6 @@ def run(i, removed):
     return res
 
 
-def fromxn(s, n):
-    if len(s) < n:
-        return
-    elif len(s) == n:
-        yield s
-    elif n == 0:
-        yield []
-    else:
-        for k in fromxn(s[1:], n):
-            yield k
-        for m in fromxn(s[1:], n - 1):
-            yield [s[0]] + m
-
-
 def getTree(i):
     res = run(i, ())
     tree = {}
@@ -87,15 +42,10 @@ def getTree(i):
     return tree
 
 
-def get_all_candidates():
+def main():
     for i in range(len(nodes)):
         tree = getTree(i)
-        start = nodes[i]
-        maxv = 0
-        for k, v in tree.items():
-            if k != start and len(v) > maxv:
-                maxv = len(v)
-        for left, right in tree.items():
+        for right in tree.values():
             for candidate in right:
                 if len(tree.get(candidate, [])) == 0:
                     continue
@@ -109,15 +59,13 @@ def get_all_candidates():
                         cs += [r]
                 rem = [i for i in nodes if i not in ps and i not in cs]
                 if len(rem) == 2:
-                    minNum = len(rem)
-                    print(rem, end="\t")
                     for r in rem:
                         if len(set(g[r]) & set(cs)) == 1:
                             ps += [r]
                         else:
                             cs += [r]
 
-                    return (left, candidate, i, minNum, len(cs), len(ps), len(cs) * len(ps))
+                    return len(cs) * len(ps)
 
 
 def childsof(tree, node):
@@ -134,9 +82,5 @@ def parentsof(tree, node):
     return []
 
 
-def main():
-    print(get_all_candidates())
-
-
 if __name__ == "__main__":
-    main()
+    print(main())
