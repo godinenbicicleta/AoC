@@ -12,7 +12,7 @@ for key, vstr in data:
 nodes = list(g.keys())
 
 
-def run(i, removed):
+def run(i):
     start = nodes[i]
     seen = set([start])
     queue = [start]
@@ -22,8 +22,6 @@ def run(i, removed):
         for n in g[current]:
             if n in seen:
                 continue
-            if (current, n) in removed or (n, current) in removed:
-                continue
             seen.add(n)
             queue.append(n)
             res[n] = current
@@ -31,7 +29,7 @@ def run(i, removed):
 
 
 def getTree(i):
-    res = run(i, ())
+    res = run(i)
     tree = {}
     for k, v in res.items():
         if v is None:
