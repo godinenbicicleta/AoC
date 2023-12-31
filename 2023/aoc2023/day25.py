@@ -1,19 +1,4 @@
-with open("data/day25.txt") as f:
-    data = [line.strip().split(": ") for line in f]
-
-g = {}
-for key, vstr in data:
-    vs = vstr.split()
-    g[key] = g.get(key, []) + vs
-    for v in vs:
-        g[v] = g.get(v, []) + [key]
-
-
-nodes = list(g.keys())
-
-
-def run(i):
-    start = nodes[i]
+def run(g, start):
     seen = set([start])
     queue = [start]
     res = {start: None}  # node: prev
@@ -28,8 +13,8 @@ def run(i):
     return res
 
 
-def getTree(i):
-    res = run(i)
+def getTree(g, node):
+    res = run(g, node)
     tree = {}
     for k, v in res.items():
         if v is None:
@@ -40,30 +25,17 @@ def getTree(i):
     return tree
 
 
-def main():
-    for i in range(len(nodes)):
-        tree = getTree(i)
-        for right in tree.values():
-            for candidate in right:
-                if len(tree.get(candidate, [])) == 0:
-                    continue
-                cs = childsof(tree, candidate) + [candidate]
-                ps = parentsof(tree, candidate)
-                rem = [i for i in nodes if i not in ps and i not in cs]
-                for r in rem:
-                    if len(set(g[r]) & set(cs)) == 0:
-                        ps += [r]
-                    elif len(set(g[r]) & set(ps)) == 0:
-                        cs += [r]
-                rem = [i for i in nodes if i not in ps and i not in cs]
-                if len(rem) == 2:
-                    for r in rem:
-                        if len(set(g[r]) & set(cs)) == 1:
-                            ps += [r]
-                        else:
-                            cs += [r]
+def parseGraph():
+    with open("data/day25.txt") as f:
+        data = [line.strip().split(": ") for line in f]
 
-                    return len(cs) * len(ps)
+    g = {}
+    for key, vstr in data:
+        vs = vstr.split()
+        g[key] = g.get(key, []) + vs
+        for v in vs:
+            g[v] = g.get(v, []) + [key]
+    return g
 
 
 def childsof(tree, node):
@@ -78,6 +50,35 @@ def parentsof(tree, node):
         if node in vs:
             return [k] + parentsof(tree, k)
     return []
+
+
+def main():
+    g = parseGraph()
+
+    nodes = tuple(g.keys())
+    node = nodes[0]
+
+    print(node)
+    tree = getTree(g, node)
+    for right in tree.values():
+        for candidate in right:
+            cs = childsof(tree, candidate) + [candidate]
+            ps = parentsof(tree, candidate)
+            rem = [i for i in nodes if i not in ps and i not in cs]
+            for r in rem:
+                if len(set(g[r]) & set(cs)) == 0:
+                    ps += [r]
+                elif len(set(g[r]) & set(ps)) == 0:
+                    cs += [r]
+            rem = [i for i in nodes if i not in ps and i not in cs]
+            if len(rem) == 2:
+                for r in rem:
+                    if len(set(g[r]) & set(cs)) == 1:
+                        ps += [r]
+                    else:
+                        cs += [r]
+
+                return len(cs) * len(ps)
 
 
 if __name__ == "__main__":
